@@ -15,7 +15,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintVertical_bias="0.2"
         android:hint="Phone Number"
-        android:textSize="20sp"
+        android:inputType="phone"
+        android:textSize="28sp"
         android:background="@color/white"
         android:textAlignment="center"
         android:id="@+id/phoneNumber"/>
@@ -25,6 +26,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Submit"
+        android:id="@+id/submitButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/phoneNumber"

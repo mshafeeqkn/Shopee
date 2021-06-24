@@ -1,60 +1,102 @@
 package com.shafeeq.shopee.fragments
 
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.EditText
+import com.google.firebase.FirebaseException
+import com.google.firebase.FirebaseTooManyRequestsException
+import com.google.firebase.auth.*
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import com.shafeeq.shopee.MainActivity
 import com.shafeeq.shopee.R
+import com.shafeeq.shopee.utils.toast
+import java.util.concurrent.TimeUnit
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [LoginFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class LoginFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private lateinit var auth: FirebaseAuth
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_login, container, false)
+        auth = Firebase.auth
+        val root = inflater.inflate(R.layout.fragment_login, container, false)
+        val phoneNumberTv = root.findViewById<EditText>(R.id.phoneNumber)
+        root.findViewById<Button>(R.id.submitButton).setOnClickListener {
+            try {
+                val options = PhoneAuthOptions.newBuilder(auth)
+                    .setPhoneNumber(phoneNumberTv.text.toString())
+                    .setTimeout(60L, TimeUnit.SECONDS)
+                    .setActivity(requireActivity())
+                    .setCallbacks(callbacks)
+                    .build()
+                PhoneAuthProvider.verifyPhoneNumber(options)
+            } catch (ex: IllegalArgumentException) {
+                context?.toast("Invalid phone number")
+            }
+        }
+        if(null != auth.currentUser) {
+
+        }
+        return root
+    }
+
+    private fun signInWithPhoneAuthCredential(credential: PhoneAuthCredential) {
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener(requireActivity()) { task ->
+                if (task.isSuccessful) {
+                    // Sign in success, update UI with the signed-in user's information
+                    Log.d(TAG, "signInWithCredential:success")
+                    val user = task.result?.user
+                    requireActivity().toast("Update User Interface here $user")
+                    Log.d(TAG, "Update User Interface here $user")
+                } else {
+                    Log.w(TAG, "signInWithCredential:failure", task.exception)
+                    if (task.exception is FirebaseAuthInvalidCredentialsException) {
+                        // The verification code entered was invalid
+                    }
+                }
+            }
+    }
+
+    private val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+        override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+            signInWithPhoneAuthCredential(credential)
+        }
+
+        override fun onVerificationFailed(e: FirebaseException) {
+            Log.w(TAG, "onVerificationFailed", e)
+            if (e is FirebaseAuthInvalidCredentialsException) {
+                context?.toast("invalid request")
+                e.printStackTrace()
+                return
+            } else if (e is FirebaseTooManyRequestsException) {
+                context?.toast("quota exceeded")
+                return
+            }
+        }
+
+        override fun onCodeSent(
+            verificationId: String,
+            token: PhoneAuthProvider.ForceResendingToken
+        ) {
+            Log.d(TAG, "onCodeSent:$verificationId")
+        }
+    }
+
+    override fun getContext(): Context? {
+        return requireActivity().applicationContext
     }
 
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment LoginFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            LoginFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+        const val TAG = "SHOPPE_DEBUG"
     }
 }
