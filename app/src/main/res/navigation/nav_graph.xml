@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/loginFragment2">
+
+
+    <fragment
+        android:id="@+id/loginFragment2"
+        android:name="com.shafeeq.shopee.fragments.LoginFragment"
+        android:label="fragment_login"
+        tools:layout="@layout/fragment_login" >
+        <action
+            android:id="@+id/action_loginFragment2_to_joinGroupFragment2"
+            app:destination="@id/joinGroupFragment2" />
+    </fragment>
+    <fragment
+        android:id="@+id/joinGroupFragment2"
+        android:name="com.shafeeq.shopee.fragments.JoinGroupFragment"
+        android:label="fragment_join_group"
+        tools:layout="@layout/fragment_join_group" >
+        <action
+            android:id="@+id/action_joinGroupFragment2_to_mainViewFragment2"
+            app:destination="@id/mainViewFragment2" />
+    </fragment>
+    <fragment
+        android:id="@+id/mainViewFragment2"
+        android:name="com.shafeeq.shopee.fragments.MainViewFragment"
+        android:label="fragment_main_view"
+        tools:layout="@layout/fragment_main_view" >
+        <action
+            android:id="@+id/action_mainViewFragment2_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.shafeeq.shopee.fragments.SettingsFragment"
+        android:label="fragment_settings"
+        tools:layout="@layout/fragment_settings" />
+</navigation>
