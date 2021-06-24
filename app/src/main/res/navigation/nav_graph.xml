@@ -3,18 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/loginFragment2">
-
-
-    <fragment
-        android:id="@+id/loginFragment2"
-        android:name="com.shafeeq.shopee.fragments.LoginFragment"
-        android:label="fragment_login"
-        tools:layout="@layout/fragment_login" >
-        <action
-            android:id="@+id/action_loginFragment2_to_joinGroupFragment2"
-            app:destination="@id/joinGroupFragment2" />
-    </fragment>
+    app:startDestination="@id/joinGroupFragment2">
     <fragment
         android:id="@+id/joinGroupFragment2"
         android:name="com.shafeeq.shopee.fragments.JoinGroupFragment"
