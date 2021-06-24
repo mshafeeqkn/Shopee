@@ -1,60 +1,124 @@
 package com.shafeeq.shopee.fragments
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.CheckBox
+import android.widget.ListView
+import android.widget.TextView
 import com.shafeeq.shopee.R
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [MainViewFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class MainViewFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private lateinit var itemList: ListView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_main_view, container, false)
+        val root = inflater.inflate(R.layout.fragment_main_view, container, false)
+        itemList = root.findViewById(R.id.itemList)
+        val adapter = ShopItemListAdapter(requireContext(), arrayListOf(
+            ListItem("Vegetables", SECTION),
+            ListItem("Uluva", ITEM),
+            ListItem("Kaduk", ITEM),
+            ListItem("Cheera", ITEM),
+            ListItem("Fruits", SECTION),
+            ListItem("Apple", ITEM),
+            ListItem("Orange", ITEM),
+            ListItem("Grape", ITEM),
+            ListItem("Rumman", ITEM),
+            ListItem("Grocery", SECTION),
+            ListItem("Rice", ITEM),
+            ListItem("Sugar", ITEM),
+            ListItem("Nuts", ITEM),
+            ListItem("Tea Powder", ITEM),
+            ListItem("Tooth Brush", ITEM),
+            ListItem("Macrona", ITEM),
+            ListItem("kadal", ITEM),
+            ListItem("parippu", ITEM),
+            ListItem("Vegetables", SECTION),
+            ListItem("Uluva", ITEM),
+            ListItem("Kaduk", ITEM),
+            ListItem("Cheera", ITEM),
+            ListItem("Fruits", SECTION),
+            ListItem("Apple", ITEM),
+            ListItem("Orange", ITEM),
+            ListItem("Grape", ITEM),
+            ListItem("Rumman", ITEM),
+            ListItem("Grocery", SECTION),
+            ListItem("Rice", ITEM),
+            ListItem("Sugar", ITEM),
+            ListItem("Nuts", ITEM),
+            ListItem("Tea Powder", ITEM),
+            ListItem("Tooth Brush", ITEM),
+            ListItem("Macrona", ITEM),
+            ListItem("kadal", ITEM),
+            ListItem("parippu", ITEM),
+        ))
+        itemList.adapter = adapter
+        return root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment MainViewFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            MainViewFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+    override fun getContext(): Context? {
+        return requireActivity().applicationContext
+    }
+}
+
+const val ITEM = 0
+const val SECTION = 1
+
+data class ListItem(
+    var name: String = "",
+    var type: Int = ITEM
+)
+
+class ShopItemListAdapter(context: Context, private val data: ArrayList<ListItem>):
+        ArrayAdapter<ListItem>(context, R.layout.shop_item, data) {
+
+    private class ViewHolder(view: View?) {
+        var itemName: CheckBox? = null
+        var sectionName: TextView? = null
+
+        init {
+            itemName = view?.findViewById(R.id.itemName)
+            sectionName = view?.findViewById(R.id.sectionName)
+        }
+    }
+
+    @SuppressLint("InflateParams")
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+        val view: View
+        val viewHolder: ViewHolder
+        val listItem = data[position]
+
+        if(convertView == null) {
+            val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            view = if(listItem.type == ITEM) inflater.inflate(R.layout.shop_item, null)
+                else inflater.inflate(R.layout.shop_list_seperator, null)
+
+            viewHolder = ViewHolder(view)
+            view.tag = viewHolder
+        } else {
+            view = convertView
+            viewHolder = view.tag as ViewHolder
+        }
+
+        if(listItem.type == ITEM) viewHolder.itemName?.text = listItem.name
+            else viewHolder.sectionName?.text = listItem.name
+
+        return view
+    }
+
+    override fun getViewTypeCount(): Int {
+        return 2
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        return data[position].type
     }
 }
