@@ -109,10 +109,6 @@ class MainViewFragment : Fragment(), ItemListener {
         item.checked = isChecked
         val groupId = requireActivity().getGroupId()
         FirebaseDatabase.getInstance().getReference("$groupId/itemList/${item.id}").setValue(item)
-        if (isChecked)
-            mAdapter.swapItem(position, mAdapter.itemCount - 1)
-        else
-            mAdapter.swapItem(position, 1)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
