@@ -2,9 +2,7 @@ package com.shafeeq.shopee.fragments
 
 import android.content.Context
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.CheckBox
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -17,20 +15,24 @@ import java.util.*
 
 class MainViewFragment : Fragment(), ItemListener {
     private lateinit var mShopItemList: RecyclerView
+    private val mDataList = ArrayList<String>()
+    private lateinit var mAdapter: NameAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val root = inflater.inflate(R.layout.fragment_main_view, container, false)
+        setHasOptionsMenu(true)
+
         mShopItemList = root.findViewById(R.id.shopItemList)
-        val data = arrayListOf("Item 1", "Item 2", "Item 3", "Item 4", "Item 5")
+        mDataList.addAll(arrayListOf("Item 1", "Item 2", "Item 3", "Item 4", "Item 5"))
         mShopItemList.layoutManager = LinearLayoutManager(requireActivity())
-        val shopItemAdapter = NameAdapter(data, this)
-        mShopItemList.adapter = shopItemAdapter
+        mAdapter = NameAdapter(mDataList, this)
+        mShopItemList.adapter = mAdapter
 
         val callback = DragManageAdapter(
-            shopItemAdapter,
+            mAdapter,
             ItemTouchHelper.UP or ItemTouchHelper.DOWN,
             0
         )
@@ -45,6 +47,17 @@ class MainViewFragment : Fragment(), ItemListener {
 
     override fun onClicked(name: String) {
         Toast.makeText(context, "The name is $name", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.main_menu, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(item.itemId == R.id.action_notify) {
+            mAdapter.notifyDataSetChanged()
+        }
+        return true
     }
 }
 
@@ -97,6 +110,9 @@ class DragManageAdapter(private var adapter: NameAdapter, dragDir: Int, swipeDir
         viewHolder: RecyclerView.ViewHolder,
         target: RecyclerView.ViewHolder
     ): Boolean {
+        if(target.adapterPosition == 0)
+            return false
+
         adapter.swapItems(viewHolder.adapterPosition, target.adapterPosition)
         return true
     }
