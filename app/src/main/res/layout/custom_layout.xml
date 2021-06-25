@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/white"
+    android:padding="10dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/body"
+        android:text="Set Manglish/English Name"
+        android:layout_margin="5dp"
+        android:textAlignment="center"
+        android:textSize="16sp"
+        android:padding="5dp"
+        android:textColor="@color/black"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/body"
+        android:layout_margin="5dp"
+        android:inputType="textCapWords"
+        android:hint="English/Manglish Name(comma separated)"
+        android:textSize="14sp"
+        android:id="@+id/text"/>
+
+    <Button
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/text"
+        android:id="@+id/noBtn"
+        android:layout_margin="5dp"
+        android:text="Cancel"
+        app:layout_constraintEnd_toStartOf="@id/yesBtn"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <Button
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="5dp"
+        android:text="Submit"
+        app:layout_constraintTop_toBottomOf="@id/text"
+        app:layout_constraintStart_toEndOf="@id/noBtn"
+        android:id="@+id/yesBtn"/>
+</androidx.constraintlayout.widget.ConstraintLayout>

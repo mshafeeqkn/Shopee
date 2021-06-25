@@ -9,6 +9,7 @@ const val SECT = 1
 
 data class ShopItem(
     var name: String = "",
+    var maglish: String = "",
     var type: Int = ITEM,
     var id: String = "",
     var checked: Boolean = false,
