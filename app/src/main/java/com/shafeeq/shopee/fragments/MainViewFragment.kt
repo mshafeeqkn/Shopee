@@ -15,7 +15,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.shafeeq.shopee.R
-import com.shafeeq.shopee.utils.SharedPreferenceHelper
+import com.shafeeq.shopee.utils.getGroupId
 import java.util.*
 
 
@@ -27,7 +27,8 @@ private const val SECT = 1
 data class ShopItem(
     var name: String = "",
     var type: Int = ITEM,
-    var id: String = ""
+    var id: String = "",
+    var checked: Boolean = false,
 ) {
     override fun toString(): String {
         return name
@@ -52,9 +53,9 @@ class MainViewFragment : Fragment(), ItemListener {
         mInputEt = root.findViewById(R.id.newItemName)
         mAddBtn = root.findViewById(R.id.addBtn)
 
+        val groupId = requireActivity().getGroupId()
         mAddBtn.setOnClickListener {
             val shopItem = ShopItem(name = mInputEt.text.toString().trim(), type = ITEM)
-            val groupId = SharedPreferenceHelper(requireActivity()).getGroupId()
             shopItem.id = FirebaseDatabase.getInstance().getReference("$groupId/itemList")
                 .push().key.toString()
             FirebaseDatabase.getInstance().getReference("$groupId/itemList/${shopItem.id}")
@@ -74,17 +75,23 @@ class MainViewFragment : Fragment(), ItemListener {
         mTouchHelper = ItemTouchHelper(callback)
         mTouchHelper.attachToRecyclerView(mShopItemList)
 
-        FirebaseDatabase.getInstance().getReference("itemList")
+        FirebaseDatabase.getInstance().getReference("$groupId/itemList")
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     mDataList.clear()
                     mDataList.add(ShopItem(name = "Non-Purchased Item", type = SECT))
                     for (data in snapshot.children) {
                         val item = data.getValue(ShopItem::class.java)!!
-                        mDataList.add(item)
+                        if (!item.checked)
+                            mDataList.add(item)
                     }
                     mDataList.add(ShopItem(name = "Purchased Item", type = SECT))
-                    mAdapter.notifyDataSetChanged()
+                    for (data in snapshot.children) {
+                        val item = data.getValue(ShopItem::class.java)!!
+                        if (item.checked)
+                            mDataList.add(item)
+                    }
+                    mShopItemList.post { mAdapter.notifyDataSetChanged() }
                 }
 
                 override fun onCancelled(error: DatabaseError) {}
@@ -98,6 +105,10 @@ class MainViewFragment : Fragment(), ItemListener {
     }
 
     override fun onChecked(name: String, position: Int, isChecked: Boolean) {
+        val item = mDataList[position]
+        item.checked = isChecked
+        val groupId = requireActivity().getGroupId()
+        FirebaseDatabase.getInstance().getReference("$groupId/itemList/${item.id}").setValue(item)
         if (isChecked)
             mAdapter.swapItem(position, mAdapter.itemCount - 1)
         else
@@ -123,25 +134,24 @@ class MainViewFragment : Fragment(), ItemListener {
 class ShopListAdapter(
     private val nameList: ArrayList<ShopItem>,
     private val listener: ItemListener
-) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    private lateinit var mRecyclerView: RecyclerView
 
     class ShopItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private var mItemName: CheckBox = itemView.findViewById(R.id.item_text)
         private var mDragIcon: ImageView = itemView.findViewById(R.id.drag_icon)
 
         @SuppressLint("ClickableViewAccessibility")
-        fun bindData(name: String, listener: ItemListener) {
+        fun bindData(name: String, listener: ItemListener, checked: Boolean) {
             mItemName.text = name
-            mItemName.setOnCheckedChangeListener { view, isChecked ->
-                if (isChecked) {
-                    view.paintFlags = view.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-                    view.alpha = 0.3F
-                } else {
-                    view.paintFlags = view.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
-                    view.alpha = 1.0F
+            mItemName.isChecked = checked
+            updateCheckboxView(mItemName, checked)
+            mItemName.apply {
+                setOnCheckedChangeListener { view, isChecked ->
+                    updateCheckboxView(view, isChecked)
+                    listener.onChecked(name, adapterPosition, isChecked)
                 }
-                listener.onChecked(name, this.adapterPosition, isChecked)
             }
             mDragIcon.setOnTouchListener { _, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
@@ -150,6 +160,21 @@ class ShopListAdapter(
                 return@setOnTouchListener false
             }
         }
+
+        private fun updateCheckboxView(view: CompoundButton, isChecked: Boolean) {
+            if (isChecked) {
+                view.paintFlags = view.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+                view.alpha = 0.3F
+            } else {
+                view.paintFlags = view.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+                view.alpha = 1.0F
+            }
+        }
+    }
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        mRecyclerView = recyclerView
     }
 
     class SectionHeadingViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -173,7 +198,11 @@ class ShopListAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (nameList[position].type == ITEM) {
-            (holder as ShopItemViewHolder).bindData(nameList[position].toString(), listener)
+            (holder as ShopItemViewHolder).bindData(
+                nameList[position].toString(),
+                listener,
+                nameList[position].checked
+            )
         } else {
             (holder as SectionHeadingViewHolder).bindData(nameList[position].toString())
         }
@@ -187,7 +216,7 @@ class ShopListAdapter(
         if (fromPosition == toPosition) return
         val item = nameList.removeAt(fromPosition)
         nameList.add(toPosition, item)
-        notifyItemMoved(fromPosition, toPosition)
+        mRecyclerView.post { notifyItemMoved(fromPosition, toPosition) }
     }
 
     fun getItemType(position: Int): Int {

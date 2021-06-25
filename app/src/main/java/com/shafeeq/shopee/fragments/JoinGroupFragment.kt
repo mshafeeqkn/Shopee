@@ -12,6 +12,7 @@ import androidx.navigation.fragment.NavHostFragment
 import com.google.firebase.database.FirebaseDatabase
 import com.shafeeq.shopee.R
 import com.shafeeq.shopee.utils.SharedPreferenceHelper
+import com.shafeeq.shopee.utils.onChange
 
 class JoinGroupFragment : Fragment() {
     private lateinit var mSubmitButton: Button
@@ -42,6 +43,9 @@ class JoinGroupFragment : Fragment() {
             }
             mUsernameEt = root.findViewById(R.id.username)
             mGroupIdEt = root.findViewById(R.id.groupId)
+            mUsernameEt.onChange {
+                mSubmitButton.text = if(it.isNotEmpty()) "GO AHEAD" else "GENERATE GROUP ID"
+            }
         }
         return root
     }
