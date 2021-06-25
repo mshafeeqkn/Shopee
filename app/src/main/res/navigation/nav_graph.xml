@@ -21,10 +21,20 @@
         <action
             android:id="@+id/action_mainViewFragment2_to_settingsFragment"
             app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_mainViewFragment2_to_fullItemList2"
+            app:destination="@id/fullItemList" />
     </fragment>
+
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.shafeeq.shopee.fragments.SettingsFragment"
         android:label="fragment_settings"
         tools:layout="@layout/fragment_settings" />
+
+    <fragment
+        android:id="@+id/fullItemList"
+        android:name="com.shafeeq.shopee.fragments.FullItemListFragment"
+        android:label="fragment_full_item_list"
+        tools:layout="@layout/fragment_full_item_list" />
 </navigation>

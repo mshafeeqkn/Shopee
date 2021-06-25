@@ -1,18 +1,19 @@
 package com.shafeeq.shopee.utils
 
-enum class Category {
-    CAT_VEG,
-    CAT_FRUITS
-}
+
+const val ITEM = 0
+
+@Suppress("unused")
+const val SECT = 1
+
 
 data class ShopItem(
+    var name: String = "",
+    var type: Int = ITEM,
     var id: String = "",
-    val name: String = "",
     var checked: Boolean = false,
-    val category: Category = Category.CAT_VEG,
+    var purchase: Boolean = true
 ) {
-    constructor(): this("")
-
     override fun toString(): String {
         return name
     }
