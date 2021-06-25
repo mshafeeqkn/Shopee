@@ -73,8 +73,8 @@ class MainViewFragment : Fragment(), ItemListener {
         return requireActivity().applicationContext
     }
 
-    override fun onClicked(name: String) {
-        Toast.makeText(context, "The name is $name", Toast.LENGTH_SHORT).show()
+    override fun onChecked(name: String, position: Int, isChecked: Boolean) {
+        Toast.makeText(context, "$position: The name is $name - checked: $isChecked", Toast.LENGTH_SHORT).show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -103,8 +103,10 @@ class ShopListAdapter(private val nameList : ArrayList<ShopItem>, private val li
         @SuppressLint("ClickableViewAccessibility")
         fun bindData(name : String, listener: ItemListener) {
             mItemName.text = name
-            mItemName.setOnClickListener { listener.onClicked(name) }
-            mDragIcon.setOnTouchListener { v, event ->
+            mItemName.setOnCheckedChangeListener { _, isChecked ->
+                listener.onChecked(name, this.adapterPosition, isChecked)
+            }
+            mDragIcon.setOnTouchListener { _, event ->
                 if(event.action == MotionEvent.ACTION_DOWN) {
                     listener.requestDrag(this)
                 }
@@ -201,6 +203,6 @@ class DragManageAdapter(private var adapter: ShopListAdapter, dragDir: Int, swip
 }
 
 interface ItemListener {
-    fun onClicked(name :String)
+    fun onChecked(name :String, position: Int, isChecked: Boolean)
     fun requestDrag(viewHolder: RecyclerView.ViewHolder)
 }
