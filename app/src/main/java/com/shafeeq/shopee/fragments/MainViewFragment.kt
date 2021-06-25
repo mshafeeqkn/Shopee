@@ -2,12 +2,12 @@ package com.shafeeq.shopee.fragments
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Paint
 import android.os.Bundle
 import android.view.*
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -45,14 +45,14 @@ class MainViewFragment : Fragment(), ItemListener {
         mShopItemList = root.findViewById(R.id.shopItemList)
         mDataList.addAll(arrayListOf(
             ShopItem("Non-Purchased Items", SECT),
-            ShopItem("Item 13"),
-            ShopItem("Item 14"),
-            ShopItem("Item 15"),
-            ShopItem("Item 11"),
-            ShopItem("Item 23"),
-            ShopItem("Item 24"),
-            ShopItem("Item 25"),
-            ShopItem("Item 21"),
+            ShopItem("Item 1"),
+            ShopItem("Item 2"),
+            ShopItem("Item 3"),
+            ShopItem("Item 4"),
+            ShopItem("Item 5"),
+            ShopItem("Item 6"),
+            ShopItem("Item 7"),
+            ShopItem("Item 8"),
             ShopItem("Purchased Items", SECT),
         ))
         mShopItemList.layoutManager = LinearLayoutManager(requireActivity())
@@ -74,7 +74,10 @@ class MainViewFragment : Fragment(), ItemListener {
     }
 
     override fun onChecked(name: String, position: Int, isChecked: Boolean) {
-        Toast.makeText(context, "$position: The name is $name - checked: $isChecked", Toast.LENGTH_SHORT).show()
+        if(isChecked)
+            mAdapter.swapItem(position, mAdapter.itemCount-1)
+        else
+            mAdapter.swapItem(position, 1)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -96,14 +99,20 @@ class MainViewFragment : Fragment(), ItemListener {
 class ShopListAdapter(private val nameList : ArrayList<ShopItem>, private val listener : ItemListener) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    class ShopItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
-    {
+    class ShopItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private var mItemName: CheckBox = itemView.findViewById(R.id.item_text)
         private var mDragIcon: ImageView = itemView.findViewById(R.id.drag_icon)
         @SuppressLint("ClickableViewAccessibility")
         fun bindData(name : String, listener: ItemListener) {
             mItemName.text = name
-            mItemName.setOnCheckedChangeListener { _, isChecked ->
+            mItemName.setOnCheckedChangeListener { view, isChecked ->
+                if(isChecked) {
+                    view.paintFlags = view.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+                    view.alpha = 0.3F
+                } else {
+                    view.paintFlags = view.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+                    view.alpha = 1.0F
+                }
                 listener.onChecked(name, this.adapterPosition, isChecked)
             }
             mDragIcon.setOnTouchListener { _, event ->
@@ -112,7 +121,6 @@ class ShopListAdapter(private val nameList : ArrayList<ShopItem>, private val li
                 }
                 return@setOnTouchListener false
             }
-
         }
     }
 
@@ -146,21 +154,12 @@ class ShopListAdapter(private val nameList : ArrayList<ShopItem>, private val li
 
     override fun getItemCount(): Int = nameList.size
 
-    override fun getItemViewType(position: Int): Int {
-        return nameList[position].type
-    }
+    override fun getItemViewType(position: Int) = nameList[position].type
 
-    fun swapItems(fromPosition: Int, toPosition: Int) {
-        if (fromPosition < toPosition) {
-            for (i in fromPosition until toPosition) {
-                nameList[i] = nameList.set(i+1, nameList[i])
-            }
-        } else {
-            for (i in fromPosition..toPosition + 1) {
-                nameList[i] = nameList.set(i-1, nameList[i])
-            }
-        }
-
+    fun swapItem(fromPosition: Int, toPosition: Int) {
+        if(fromPosition == toPosition) return
+        val item = nameList.removeAt(fromPosition)
+        nameList.add(toPosition, item)
         notifyItemMoved(fromPosition, toPosition)
     }
 
@@ -181,7 +180,7 @@ class DragManageAdapter(private var adapter: ShopListAdapter, dragDir: Int, swip
         if(target.adapterPosition == 0)
             return false
 
-        adapter.swapItems(viewHolder.adapterPosition, target.adapterPosition)
+        adapter.swapItem(viewHolder.adapterPosition, target.adapterPosition)
         return true
     }
 
