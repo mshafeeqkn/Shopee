@@ -1,5 +1,6 @@
 package com.shafeeq.shopee.fragments
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Paint
 import android.os.Bundle
@@ -79,6 +80,7 @@ class FullShopListAdapter(
 
     override fun getViewTypeCount() = 2
 
+    @SuppressLint("InflateParams")
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val view: View
         val viewHolder: ViewHolder
@@ -100,13 +102,13 @@ class FullShopListAdapter(
         }
 
         if (shopItem.type == ITEM) {
+            viewHolder.mItemNameCheck?.setOnCheckedChangeListener(null)
             viewHolder.mItemNameCheck?.text = shopItem.name
             viewHolder.mItemNameCheck?.isChecked = shopItem.purchase
             updateCheckboxView(viewHolder.mItemNameCheck!!, shopItem.purchase)
             viewHolder.mItemNameCheck?.setOnCheckedChangeListener { _, isChecked ->
                 shopItem.purchase = isChecked
-                FirebaseDatabase.getInstance().getReference("$groupId/itemList/${shopItem.id}")
-                    .setValue(shopItem)
+                FirebaseDatabase.getInstance().getReference("$groupId/itemList/${shopItem.id}").setValue(shopItem)
             }
         } else {
             viewHolder.mSectNameTextView?.text = shopItem.name
