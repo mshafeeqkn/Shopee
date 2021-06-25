@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.*
 import android.widget.CheckBox
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -13,10 +14,23 @@ import com.shafeeq.shopee.R
 import java.util.*
 
 
+private const val ITEM = 0
+@Suppress("unused")
+private const val SECT = 1
+
+data class ShopItem(
+    var name: String = "",
+    var type: Int = ITEM
+) {
+    override fun toString(): String {
+        return name
+    }
+}
+
 class MainViewFragment : Fragment(), ItemListener {
     private lateinit var mShopItemList: RecyclerView
-    private val mDataList = ArrayList<String>()
-    private lateinit var mAdapter: NameAdapter
+    private val mDataList = ArrayList<ShopItem>()
+    private lateinit var mAdapter: ShopListAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -26,9 +40,15 @@ class MainViewFragment : Fragment(), ItemListener {
         setHasOptionsMenu(true)
 
         mShopItemList = root.findViewById(R.id.shopItemList)
-        mDataList.addAll(arrayListOf("Item 1", "Item 2", "Item 3", "Item 4", "Item 5"))
+        mDataList.addAll(arrayListOf(
+            ShopItem("Item 1"),
+            ShopItem("Item 2", SECT),
+            ShopItem("Item 3"),
+            ShopItem("Item 4"),
+            ShopItem("Item 5")
+        ))
         mShopItemList.layoutManager = LinearLayoutManager(requireActivity())
-        mAdapter = NameAdapter(mDataList, this)
+        mAdapter = ShopListAdapter(mDataList, this)
         mShopItemList.adapter = mAdapter
 
         val callback = DragManageAdapter(
@@ -61,31 +81,52 @@ class MainViewFragment : Fragment(), ItemListener {
     }
 }
 
-class NameAdapter(private val nameList : ArrayList<String>, private val listener : ItemListener) :
-    RecyclerView.Adapter<NameAdapter.NameViewHolder>() {
+class ShopListAdapter(private val nameList : ArrayList<ShopItem>, private val listener : ItemListener) :
+    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NameViewHolder
+    class ShopItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
     {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.list_item_layout, parent, false)
-        return NameViewHolder(view)
+        private var mItemName: CheckBox = itemView.findViewById(R.id.item_text)
+        fun bindData(name : String , listener: ItemListener) {
+            mItemName.text = name
+            mItemName.setOnClickListener {
+                listener.onClicked(name)
+            }
+        }
     }
 
-    override fun onBindViewHolder(holder: NameViewHolder, position: Int)
+    class SectionHeadingViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
+        private var mSectionName: TextView = itemView.findViewById(R.id.section_name)
+        fun bindData(name: String) {
+            mSectionName.text = name
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
+
+        return if (viewType == ITEM) {
+            val view = inflater.inflate(R.layout.list_item_layout, parent, false)
+            ShopItemViewHolder(view)
+        } else {
+            val view = inflater.inflate(R.layout.shop_list_seperator, parent, false)
+            SectionHeadingViewHolder(view)
+        }
+    }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int)
     {
-        holder.bindData(nameList[position], listener)
+        if(nameList[position].type == ITEM) {
+            (holder as ShopItemViewHolder).bindData(nameList[position].toString(), listener)
+        } else {
+            (holder as SectionHeadingViewHolder).bindData(nameList[position].toString())
+        }
     }
 
     override fun getItemCount(): Int = nameList.size
 
-    class NameViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
-    {
-        private var tvName: CheckBox = itemView.findViewById(R.id.item_text)
-        fun bindData(name : String , listener: ItemListener) {
-            tvName.text = name
-            tvName.setOnClickListener {
-                listener.onClicked(name)
-            }
-        }
+    override fun getItemViewType(position: Int): Int {
+        return nameList[position].type
     }
 
     fun swapItems(fromPosition: Int, toPosition: Int) {
@@ -101,15 +142,21 @@ class NameAdapter(private val nameList : ArrayList<String>, private val listener
 
         notifyItemMoved(fromPosition, toPosition)
     }
+
+    fun getItemType(position: Int): Int {
+        return nameList[position].type
+    }
 }
 
-class DragManageAdapter(private var adapter: NameAdapter, dragDir: Int, swipeDir: Int):
+class DragManageAdapter(private var adapter: ShopListAdapter, dragDir: Int, swipeDir: Int):
     ItemTouchHelper.SimpleCallback(dragDir, swipeDir){
     override fun onMove(
         recyclerView: RecyclerView,
         viewHolder: RecyclerView.ViewHolder,
         target: RecyclerView.ViewHolder
     ): Boolean {
+        // Item should not move over first item since the first item
+        // will be always a heading
         if(target.adapterPosition == 0)
             return false
 
@@ -119,6 +166,16 @@ class DragManageAdapter(private var adapter: NameAdapter, dragDir: Int, swipeDir
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
 
+    }
+
+    override fun getMovementFlags(
+        recyclerView: RecyclerView,
+        viewHolder: RecyclerView.ViewHolder
+    ): Int {
+        // Don't move section heading
+        if(adapter.getItemType(viewHolder.adapterPosition) == SECT)
+             return 0
+        return super.getMovementFlags(recyclerView, viewHolder)
     }
 }
 
