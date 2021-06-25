@@ -5,13 +5,15 @@ import android.content.Context
 import android.graphics.Paint
 import android.os.Bundle
 import android.view.*
-import android.widget.CheckBox
-import android.widget.ImageView
-import android.widget.TextView
+import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.shafeeq.shopee.R
 import java.util.*
 
@@ -22,7 +24,8 @@ private const val SECT = 1
 
 data class ShopItem(
     var name: String = "",
-    var type: Int = ITEM
+    var type: Int = ITEM,
+    var id: String = ""
 ) {
     override fun toString(): String {
         return name
@@ -34,6 +37,8 @@ class MainViewFragment : Fragment(), ItemListener {
     private val mDataList = ArrayList<ShopItem>()
     private lateinit var mAdapter: ShopListAdapter
     private lateinit var mTouchHelper: ItemTouchHelper
+    private lateinit var mInputEt: EditText
+    private lateinit var mAddBtn: Button
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -41,20 +46,17 @@ class MainViewFragment : Fragment(), ItemListener {
     ): View? {
         val root = inflater.inflate(R.layout.fragment_main_view, container, false)
         setHasOptionsMenu(true)
-
         mShopItemList = root.findViewById(R.id.shopItemList)
-        mDataList.addAll(arrayListOf(
-            ShopItem("Non-Purchased Items", SECT),
-            ShopItem("Item 1"),
-            ShopItem("Item 2"),
-            ShopItem("Item 3"),
-            ShopItem("Item 4"),
-            ShopItem("Item 5"),
-            ShopItem("Item 6"),
-            ShopItem("Item 7"),
-            ShopItem("Item 8"),
-            ShopItem("Purchased Items", SECT),
-        ))
+        mInputEt = root.findViewById(R.id.newItemName)
+        mAddBtn = root.findViewById(R.id.addBtn)
+
+        mAddBtn.setOnClickListener {
+            val shopItem = ShopItem(name = mInputEt.text.toString().trim(), type = ITEM)
+            shopItem.id = FirebaseDatabase.getInstance().getReference("itemList").push().key.toString()
+            FirebaseDatabase.getInstance().getReference("itemList/${shopItem.id}").setValue(shopItem)
+            mInputEt.setText("")
+        }
+
         mShopItemList.layoutManager = LinearLayoutManager(requireActivity())
         mAdapter = ShopListAdapter(mDataList, this)
         mShopItemList.adapter = mAdapter
@@ -66,6 +68,21 @@ class MainViewFragment : Fragment(), ItemListener {
         )
         mTouchHelper = ItemTouchHelper(callback)
         mTouchHelper.attachToRecyclerView(mShopItemList)
+
+        FirebaseDatabase.getInstance().getReference("itemList").addValueEventListener(object: ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                mDataList.clear()
+                mDataList.add(ShopItem(name = "Non-Purchased Item", type = SECT))
+                for(data in snapshot.children) {
+                    val item = data.getValue(ShopItem::class.java)!!
+                    mDataList.add(item)
+                }
+                mDataList.add(ShopItem(name = "Purchased Item", type = SECT))
+                mAdapter.notifyDataSetChanged()
+            }
+            override fun onCancelled(error: DatabaseError) {}
+
+        })
         return root
     }
 
