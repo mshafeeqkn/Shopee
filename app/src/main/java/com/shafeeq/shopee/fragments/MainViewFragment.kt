@@ -1,9 +1,11 @@
 package com.shafeeq.shopee.fragments
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.view.*
 import android.widget.CheckBox
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -31,6 +33,7 @@ class MainViewFragment : Fragment(), ItemListener {
     private lateinit var mShopItemList: RecyclerView
     private val mDataList = ArrayList<ShopItem>()
     private lateinit var mAdapter: ShopListAdapter
+    private lateinit var mTouchHelper: ItemTouchHelper
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -41,6 +44,11 @@ class MainViewFragment : Fragment(), ItemListener {
 
         mShopItemList = root.findViewById(R.id.shopItemList)
         mDataList.addAll(arrayListOf(
+            ShopItem("Item 2", SECT),
+            ShopItem("Item 1"),
+            ShopItem("Item 3"),
+            ShopItem("Item 4"),
+            ShopItem("Item 5"),
             ShopItem("Item 1"),
             ShopItem("Item 2", SECT),
             ShopItem("Item 3"),
@@ -56,8 +64,8 @@ class MainViewFragment : Fragment(), ItemListener {
             ItemTouchHelper.UP or ItemTouchHelper.DOWN,
             0
         )
-        val helper = ItemTouchHelper(callback)
-        helper.attachToRecyclerView(mShopItemList)
+        mTouchHelper = ItemTouchHelper(callback)
+        mTouchHelper.attachToRecyclerView(mShopItemList)
         return root
     }
 
@@ -79,6 +87,10 @@ class MainViewFragment : Fragment(), ItemListener {
         }
         return true
     }
+
+    override fun requestDrag(viewHolder: RecyclerView.ViewHolder) {
+        mTouchHelper.startDrag(viewHolder)
+    }
 }
 
 class ShopListAdapter(private val nameList : ArrayList<ShopItem>, private val listener : ItemListener) :
@@ -87,11 +99,18 @@ class ShopListAdapter(private val nameList : ArrayList<ShopItem>, private val li
     class ShopItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
     {
         private var mItemName: CheckBox = itemView.findViewById(R.id.item_text)
-        fun bindData(name : String , listener: ItemListener) {
+        private var mDragIcon: ImageView = itemView.findViewById(R.id.drag_icon)
+        @SuppressLint("ClickableViewAccessibility")
+        fun bindData(name : String, listener: ItemListener) {
             mItemName.text = name
-            mItemName.setOnClickListener {
-                listener.onClicked(name)
+            mItemName.setOnClickListener { listener.onClicked(name) }
+            mDragIcon.setOnTouchListener { v, event ->
+                if(event.action == MotionEvent.ACTION_DOWN) {
+                    listener.requestDrag(this)
+                }
+                return@setOnTouchListener false
             }
+
         }
     }
 
@@ -177,8 +196,11 @@ class DragManageAdapter(private var adapter: ShopListAdapter, dragDir: Int, swip
              return 0
         return super.getMovementFlags(recyclerView, viewHolder)
     }
+
+    override fun isLongPressDragEnabled() = false
 }
 
 interface ItemListener {
     fun onClicked(name :String)
+    fun requestDrag(viewHolder: RecyclerView.ViewHolder)
 }
