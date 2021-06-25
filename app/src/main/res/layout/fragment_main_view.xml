@@ -13,13 +13,14 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/newItemName"/>
 
-    <EditText
+    <AutoCompleteTextView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:id="@+id/newItemName"
         android:hint="Item Name"
         android:background="@color/white"
         android:paddingTop="10dp"
+        android:completionThreshold="1"
         android:paddingBottom="10dp"
         android:paddingStart="40dp"
         android:paddingEnd="0dp"

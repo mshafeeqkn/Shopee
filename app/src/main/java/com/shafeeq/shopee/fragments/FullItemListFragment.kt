@@ -108,7 +108,7 @@ class FullShopListAdapter(
             viewHolder.mItemNameCheck?.setOnCheckedChangeListener(null)
             viewHolder.mItemNameCheck?.text = shopItem.name
             viewHolder.mItemNameCheck?.isChecked = shopItem.purchase
-            viewHolder.mItemNameCheck?.setTextColor(if(shopItem.maglish.isEmpty()) Color.RED else Color.BLACK)
+            viewHolder.mItemNameCheck?.setTextColor(if(shopItem.manglish.isEmpty()) Color.RED else Color.BLACK)
             updateCheckboxView(viewHolder.mItemNameCheck!!, shopItem.purchase)
             viewHolder.mItemNameCheck?.setOnCheckedChangeListener { _, isChecked ->
                 shopItem.purchase = isChecked
@@ -141,11 +141,11 @@ class FullShopListAdapter(
         dialog.setCancelable(false)
         dialog.setContentView(R.layout.custom_layout)
         val input = dialog.findViewById<EditText>(R.id.text)
-        input.setText(shopItem.maglish)
+        input.setText(shopItem.manglish)
         val yesBtn = dialog.findViewById(R.id.yesBtn) as Button
         val noBtn = dialog.findViewById(R.id.noBtn) as TextView
         yesBtn.setOnClickListener {
-            shopItem.maglish = input.text.toString()
+            shopItem.manglish = input.text.toString()
             FirebaseDatabase.getInstance().getReference("$groupId/itemList/${shopItem.id}").setValue(shopItem)
             dialog.dismiss()
         }

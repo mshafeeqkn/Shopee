@@ -21,17 +21,19 @@ import com.shafeeq.shopee.utils.SECT
 import com.shafeeq.shopee.utils.ShopItem
 import com.shafeeq.shopee.utils.getGroupId
 import java.util.*
-
+import kotlin.collections.ArrayList
 
 
 class MainViewFragment : Fragment(), ItemListener {
     private lateinit var mShopItemList: RecyclerView
     private lateinit var mAdapter: ShopListAdapter
     private lateinit var mTouchHelper: ItemTouchHelper
-    private lateinit var mInputEt: EditText
+    private lateinit var mInputActv: AutoCompleteTextView
     private lateinit var mAddBtn: Button
+    private lateinit var mInputAdapter: ItemSearchAdapter
 
     private val mDataList = ArrayList<ShopItem>()
+    private val mInputDataList = ArrayList<ShopItem>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -40,17 +42,18 @@ class MainViewFragment : Fragment(), ItemListener {
         val root = inflater.inflate(R.layout.fragment_main_view, container, false)
         setHasOptionsMenu(true)
         mShopItemList = root.findViewById(R.id.shopItemList)
-        mInputEt = root.findViewById(R.id.newItemName)
+        mInputActv = root.findViewById(R.id.newItemName)
         mAddBtn = root.findViewById(R.id.addBtn)
 
         val groupId = requireActivity().getGroupId()
         mAddBtn.setOnClickListener {
-            val shopItem = ShopItem(name = mInputEt.text.toString().trim(), type = ITEM)
+            val shopItem = ShopItem(name = mInputActv.text.toString().trim(), type = ITEM)
+            if(shopItem.name.trim().isEmpty()) return@setOnClickListener
             shopItem.id = FirebaseDatabase.getInstance().getReference("$groupId/itemList")
                 .push().key.toString()
             FirebaseDatabase.getInstance().getReference("$groupId/itemList/${shopItem.id}")
                 .setValue(shopItem)
-            mInputEt.setText("")
+            mInputActv.setText("")
         }
 
         mShopItemList.layoutManager = LinearLayoutManager(requireActivity())
@@ -82,6 +85,13 @@ class MainViewFragment : Fragment(), ItemListener {
                             mDataList.add(item)
                     }
                     mShopItemList.post { mAdapter.notifyDataSetChanged() }
+
+                    mInputDataList.clear()
+                    for(data in snapshot.children) {
+                        mInputDataList.add(data.getValue(ShopItem::class.java)!!)
+                    }
+                    mInputAdapter = ItemSearchAdapter(requireContext(), mInputDataList)
+                    mInputActv.setAdapter(mInputAdapter)
                 }
 
                 override fun onCancelled(error: DatabaseError) {}
@@ -249,6 +259,80 @@ class DragManageAdapter(private var adapter: ShopListAdapter, dragDir: Int, swip
     }
 
     override fun isLongPressDragEnabled() = false
+}
+
+class ItemSearchAdapter(private var mContext: Context, private var mDataList: ArrayList<ShopItem>):
+        ArrayAdapter<ShopItem>(mContext, R.layout.simple_lite_item, mDataList) {
+    private var filter = SearchFilter()
+
+    private class ViewHolder(view: View?) {
+        var name: TextView? = null
+        init {
+            name = view?.findViewById(R.id.itemNameText)
+        }
+    }
+
+    override fun getCount() = mDataList.size
+
+    override fun getFilter(): Filter {
+        return filter
+    }
+
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+        val view: View
+        val viewHolder: ViewHolder
+        val item = mDataList[position]
+
+        val inflater = mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        if(convertView == null) {
+            view = inflater.inflate(R.layout.simple_lite_item, parent, false)
+            viewHolder = ViewHolder(view)
+            view.tag = viewHolder
+        } else {
+            view = convertView
+            viewHolder = view.tag as ViewHolder
+        }
+        viewHolder.name?.text = item.name
+        return view
+    }
+
+    inner class SearchFilter: Filter() {
+        private var completeList = ArrayList<ShopItem>()
+        private var filteredList = ArrayList<ShopItem>()
+
+        override fun performFiltering(constraint: CharSequence?): FilterResults {
+            if(completeList.isEmpty())
+                completeList.addAll(mDataList)
+
+            filteredList.clear()
+            val results = FilterResults()
+            if(constraint == null || constraint.isEmpty()) {
+                filteredList.addAll(completeList)
+            } else {
+                val filterPattern = constraint.toString().toLowerCase(Locale.ENGLISH).trim()
+                for(item in mDataList) {
+                    if(item.name.toLowerCase(Locale.ENGLISH).contains(filterPattern) ||
+                        item.manglish.toLowerCase(Locale.ENGLISH).contains(filterPattern)) {
+                        filteredList.add(item)
+                    }
+                }
+            }
+            results.values = filteredList
+            results.count = filteredList.size
+            return results
+        }
+
+        override fun convertResultToString(resultValue: Any?): CharSequence {
+            return (resultValue as ShopItem).name
+        }
+
+        override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
+            mDataList.clear()
+            @Suppress("UNCHECKED_CAST")
+            mDataList.addAll(results?.values as ArrayList<ShopItem>)
+            notifyDataSetChanged()
+        }
+    }
 }
 
 interface ItemListener {
