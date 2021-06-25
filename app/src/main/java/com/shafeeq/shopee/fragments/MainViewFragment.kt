@@ -44,16 +44,16 @@ class MainViewFragment : Fragment(), ItemListener {
 
         mShopItemList = root.findViewById(R.id.shopItemList)
         mDataList.addAll(arrayListOf(
-            ShopItem("Item 2", SECT),
-            ShopItem("Item 1"),
-            ShopItem("Item 3"),
-            ShopItem("Item 4"),
-            ShopItem("Item 5"),
-            ShopItem("Item 1"),
-            ShopItem("Item 2", SECT),
-            ShopItem("Item 3"),
-            ShopItem("Item 4"),
-            ShopItem("Item 5")
+            ShopItem("Non-Purchased Items", SECT),
+            ShopItem("Item 13"),
+            ShopItem("Item 14"),
+            ShopItem("Item 15"),
+            ShopItem("Item 11"),
+            ShopItem("Item 23"),
+            ShopItem("Item 24"),
+            ShopItem("Item 25"),
+            ShopItem("Item 21"),
+            ShopItem("Purchased Items", SECT),
         ))
         mShopItemList.layoutManager = LinearLayoutManager(requireActivity())
         mAdapter = ShopListAdapter(mDataList, this)
