@@ -7,7 +7,7 @@
     <fragment
         android:id="@+id/joinGroupFragment2"
         android:name="com.shafeeq.shopee.fragments.JoinGroupFragment"
-        android:label="fragment_join_group"
+        android:label="Join Group"
         tools:layout="@layout/fragment_join_group" >
         <action
             android:id="@+id/action_joinGroupFragment2_to_mainViewFragment2"
@@ -16,7 +16,7 @@
     <fragment
         android:id="@+id/mainViewFragment2"
         android:name="com.shafeeq.shopee.fragments.MainViewFragment"
-        android:label="fragment_main_view"
+        android:label="Shopping List"
         tools:layout="@layout/fragment_main_view" >
         <action
             android:id="@+id/action_mainViewFragment2_to_settingsFragment"
@@ -29,12 +29,12 @@
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.shafeeq.shopee.fragments.SettingsFragment"
-        android:label="fragment_settings"
+        android:label="Settings"
         tools:layout="@layout/fragment_settings" />
 
     <fragment
         android:id="@+id/fullItemList"
         android:name="com.shafeeq.shopee.fragments.FullItemListFragment"
-        android:label="fragment_full_item_list"
+        android:label="Full Item List"
         tools:layout="@layout/fragment_full_item_list" />
 </navigation>

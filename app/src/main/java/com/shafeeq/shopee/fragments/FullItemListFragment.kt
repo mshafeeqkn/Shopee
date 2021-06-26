@@ -112,6 +112,10 @@ class FullShopListAdapter(
             updateCheckboxView(viewHolder.mItemNameCheck!!, shopItem.purchase)
             viewHolder.mItemNameCheck?.setOnCheckedChangeListener { _, isChecked ->
                 shopItem.purchase = isChecked
+
+                // Add the item like it's not bought in shopping list
+                if(isChecked)
+                    shopItem.checked = false
                 FirebaseDatabase.getInstance().getReference("$groupId/itemList/${shopItem.id}").setValue(shopItem)
             }
 

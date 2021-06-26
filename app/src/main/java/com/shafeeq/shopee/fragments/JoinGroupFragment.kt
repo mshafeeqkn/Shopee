@@ -43,7 +43,7 @@ class JoinGroupFragment : Fragment() {
             }
             mUsernameEt = root.findViewById(R.id.username)
             mGroupIdEt = root.findViewById(R.id.groupId)
-            mUsernameEt.onChange {
+            mGroupIdEt.onChange {
                 mSubmitButton.text = if(it.isNotEmpty()) "GO AHEAD" else "GENERATE GROUP ID"
             }
         }

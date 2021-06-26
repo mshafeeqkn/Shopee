@@ -18,4 +18,13 @@ data class ShopItem(
     override fun toString(): String {
         return name
     }
+
+    override fun equals(other: Any?): Boolean {
+        return (other as ShopItem).name == name
+    }
+
+    override fun hashCode(): Int {
+        return name.hashCode()
+    }
+
 }

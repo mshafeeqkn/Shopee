@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.*
 import android.widget.*
 import androidx.fragment.app.Fragment
+import androidx.navigation.NavDirections
 import androidx.navigation.fragment.NavHostFragment
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,10 +17,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.shafeeq.shopee.R
-import com.shafeeq.shopee.utils.ITEM
-import com.shafeeq.shopee.utils.SECT
-import com.shafeeq.shopee.utils.ShopItem
-import com.shafeeq.shopee.utils.getGroupId
+import com.shafeeq.shopee.utils.*
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -47,10 +45,17 @@ class MainViewFragment : Fragment(), ItemListener {
 
         val groupId = requireActivity().getGroupId()
         mAddBtn.setOnClickListener {
-            val shopItem = ShopItem(name = mInputActv.text.toString().trim(), type = ITEM)
+            var shopItem = ShopItem(name = mInputActv.text.toString().trim(), type = ITEM)
             if(shopItem.name.trim().isEmpty()) return@setOnClickListener
-            shopItem.id = FirebaseDatabase.getInstance().getReference("$groupId/itemList")
-                .push().key.toString()
+
+            if(mInputDataList.contains(shopItem)) {
+                shopItem = mInputDataList[mInputDataList.indexOf(shopItem)]
+                shopItem.purchase = true
+            } else {
+                shopItem.id = FirebaseDatabase.getInstance().getReference("$groupId/itemList")
+                    .push().key.toString()
+            }
+
             FirebaseDatabase.getInstance().getReference("$groupId/itemList/${shopItem.id}")
                 .setValue(shopItem)
             mInputActv.setText("")
@@ -71,33 +76,40 @@ class MainViewFragment : Fragment(), ItemListener {
         FirebaseDatabase.getInstance().getReference("$groupId/itemList")
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    mDataList.clear()
-                    mDataList.add(ShopItem(name = "Non-Purchased Item", type = SECT))
-                    for (data in snapshot.children) {
-                        val item = data.getValue(ShopItem::class.java)!!
-                        if (item.purchase && !item.checked)
-                            mDataList.add(item)
-                    }
-                    mDataList.add(ShopItem(name = "Purchased Item", type = SECT))
-                    for (data in snapshot.children) {
-                        val item = data.getValue(ShopItem::class.java)!!
-                        if (item.purchase && item.checked)
-                            mDataList.add(item)
-                    }
-                    mShopItemList.post { mAdapter.notifyDataSetChanged() }
-
-                    mInputDataList.clear()
-                    for(data in snapshot.children) {
-                        mInputDataList.add(data.getValue(ShopItem::class.java)!!)
-                    }
-                    mInputAdapter = ItemSearchAdapter(requireContext(), mInputDataList)
-                    mInputActv.setAdapter(mInputAdapter)
+                    loadListViewItems(snapshot)
+                    loadInputAutocompleteList(snapshot)
                 }
 
                 override fun onCancelled(error: DatabaseError) {}
 
             })
         return root
+    }
+
+    private fun loadInputAutocompleteList(snapshot: DataSnapshot) {
+        mInputDataList.clear()
+        for(data in snapshot.children) {
+            mInputDataList.add(data.getValue(ShopItem::class.java)!!)
+        }
+        mInputAdapter = ItemSearchAdapter(requireContext(), mInputDataList)
+        mInputActv.setAdapter(mInputAdapter)
+    }
+
+    private fun loadListViewItems(snapshot: DataSnapshot) {
+        mDataList.clear()
+        mDataList.add(ShopItem(name = "Non-Purchased Item", type = SECT))
+        for (data in snapshot.children) {
+            val item = data.getValue(ShopItem::class.java)!!
+            if (item.purchase && !item.checked)
+                mDataList.add(item)
+        }
+        mDataList.add(ShopItem(name = "Purchased Item", type = SECT))
+        for (data in snapshot.children) {
+            val item = data.getValue(ShopItem::class.java)!!
+            if (item.purchase && item.checked)
+                mDataList.add(item)
+        }
+        mShopItemList.post { mAdapter.notifyDataSetChanged() }
     }
 
     override fun getContext(): Context? {
@@ -116,8 +128,18 @@ class MainViewFragment : Fragment(), ItemListener {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.action_full_list) {
-            navigateToFullList()
+        when(item.itemId) {
+            R.id.action_full_list -> navigateToAction(
+                MainViewFragmentDirections.actionMainViewFragment2ToFullItemList2()
+            )
+
+            R.id.action_settings -> navigateToAction(
+                MainViewFragmentDirections.actionMainViewFragment2ToSettingsFragment()
+            )
+
+            R.id.action_clear_all -> {
+
+            }
         }
         return true
     }
@@ -126,11 +148,10 @@ class MainViewFragment : Fragment(), ItemListener {
         mTouchHelper.startDrag(viewHolder)
     }
 
-    private fun navigateToFullList() {
+    private fun navigateToAction(action: NavDirections) {
         val navHostFragment = requireActivity().supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
-        val action = MainViewFragmentDirections.actionMainViewFragment2ToFullItemList2()
         navController.navigate(action)
     }
 }

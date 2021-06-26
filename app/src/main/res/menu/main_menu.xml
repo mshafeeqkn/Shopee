@@ -6,4 +6,14 @@
         android:id="@+id/action_full_list"
         android:title="Full List"
         app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/action_settings"
+        android:title="Settings"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/action_clear_all"
+        android:title="Clear All List"
+        app:showAsAction="never"/>
 </menu>
