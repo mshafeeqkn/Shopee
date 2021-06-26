@@ -18,8 +18,26 @@
     <CheckBox
         android:id="@+id/item_text"
         android:layout_width="0dp"
+        android:text="Shafeeque"
         android:layout_height="wrap_content"
-        android:layout_weight="1" />
+        android:layout_weight="0.75" />
+
+    <EditText
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:id="@+id/quantity"
+        android:hint="Quantity"
+        android:textSize="15sp"
+        android:background="@color/white"
+        android:layout_weight="0.25"/>
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:id="@+id/remove_item"
+        android:src="@drawable/ic_baseline_close_24"
+        android:paddingStart="8dp"
+        android:paddingEnd="16dp"/>
 
 </LinearLayout>
 

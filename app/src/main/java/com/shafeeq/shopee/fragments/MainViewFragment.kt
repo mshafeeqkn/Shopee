@@ -148,6 +148,16 @@ class MainViewFragment : Fragment(), ItemListener {
         mTouchHelper.startDrag(viewHolder)
     }
 
+    override fun removeItem(item: ShopItem) {
+        val groupId = requireActivity().getGroupId()
+        item.purchase = false
+        FirebaseDatabase.getInstance().getReference("$groupId/itemList/${item.id}").setValue(item)
+
+    }
+
+    override fun saveQuantity(item: ShopItem, quantity: String) {
+    }
+
     private fun navigateToAction(action: NavDirections) {
         val navHostFragment = requireActivity().supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
@@ -166,16 +176,20 @@ class ShopListAdapter(
     class ShopItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private var mItemName: CheckBox = itemView.findViewById(R.id.item_text)
         private var mDragIcon: ImageView = itemView.findViewById(R.id.drag_icon)
+        private var mRemove: ImageView = itemView.findViewById(R.id.remove_item)
+        private var mQuantity: EditText = itemView.findViewById(R.id.quantity)
 
         @SuppressLint("ClickableViewAccessibility")
-        fun bindData(name: String, listener: ItemListener, checked: Boolean) {
-            mItemName.text = name
-            mItemName.isChecked = checked
-            updateCheckboxView(mItemName, checked)
+        fun bindData(item: ShopItem, listener: ItemListener) {
+            mItemName.text = item.name
+            mItemName.isChecked = item.checked
+            updateCheckboxView(mItemName, item.checked)
+
+            mQuantity.setText(item.quantity)
             mItemName.apply {
                 setOnCheckedChangeListener { view, isChecked ->
                     updateCheckboxView(view, isChecked)
-                    listener.onChecked(name, adapterPosition, isChecked)
+                    listener.onChecked(item.name, adapterPosition, isChecked)
                 }
             }
             mDragIcon.setOnTouchListener { _, event ->
@@ -183,6 +197,14 @@ class ShopListAdapter(
                     listener.requestDrag(this)
                 }
                 return@setOnTouchListener false
+            }
+
+            mRemove.setOnClickListener {
+                listener.removeItem(item)
+            }
+
+            mQuantity.onChange {
+                listener.saveQuantity(item, it)
             }
         }
 
@@ -223,11 +245,7 @@ class ShopListAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (nameList[position].type == ITEM) {
-            (holder as ShopItemViewHolder).bindData(
-                nameList[position].toString(),
-                listener,
-                nameList[position].checked
-            )
+            (holder as ShopItemViewHolder).bindData(nameList[position], listener)
         } else {
             (holder as SectionHeadingViewHolder).bindData(nameList[position].toString())
         }
@@ -359,4 +377,6 @@ class ItemSearchAdapter(private var mContext: Context, private var mDataList: Ar
 interface ItemListener {
     fun onChecked(name: String, position: Int, isChecked: Boolean)
     fun requestDrag(viewHolder: RecyclerView.ViewHolder)
+    fun removeItem(item: ShopItem)
+    fun saveQuantity(item: ShopItem, quantity: String)
 }

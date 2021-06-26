@@ -13,7 +13,8 @@ data class ShopItem(
     var type: Int = ITEM,
     var id: String = "",
     var checked: Boolean = false,
-    var purchase: Boolean = true
+    var purchase: Boolean = true,
+    var quantity: String = ""
 ) {
     override fun toString(): String {
         return name
