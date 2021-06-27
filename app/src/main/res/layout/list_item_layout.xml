@@ -34,7 +34,7 @@
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:id="@+id/remove_item"
+        android:id="@+id/item_action"
         android:src="@drawable/ic_baseline_close_24"
         android:paddingStart="8dp"
         android:paddingEnd="16dp"/>

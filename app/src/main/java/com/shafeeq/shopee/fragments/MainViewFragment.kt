@@ -7,6 +7,7 @@ import android.graphics.Paint
 import android.os.Bundle
 import android.view.*
 import android.widget.*
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.NavHostFragment
@@ -62,6 +63,7 @@ class MainViewFragment : Fragment(), ItemListener {
             if(mInputDataList.contains(shopItem)) {
                 shopItem = mInputDataList[mInputDataList.indexOf(shopItem)]
                 shopItem.purchase = true
+                shopItem.checked = false
             } else {
                 shopItem.id = FirebaseDatabase.getInstance().getReference("$groupId/itemList")
                     .push().key.toString()
@@ -73,7 +75,7 @@ class MainViewFragment : Fragment(), ItemListener {
         }
 
         mShopItemList.layoutManager = LinearLayoutManager(mActivity)
-        mAdapter = ShopListAdapter(mDataList, this)
+        mAdapter = ShopListAdapter(mContext, mDataList, this)
         mShopItemList.adapter = mAdapter
 
         val callback = DragManageAdapter(
@@ -161,10 +163,12 @@ class MainViewFragment : Fragment(), ItemListener {
         val groupId = mActivity.getGroupId()
         item.purchase = false
         FirebaseDatabase.getInstance().getReference("$groupId/itemList/${item.id}").setValue(item)
-
     }
 
     override fun saveQuantity(item: ShopItem, quantity: String) {
+        val groupId = mActivity.getGroupId()
+        item.quantity = quantity
+        FirebaseDatabase.getInstance().getReference("$groupId/itemList/${item.id}").setValue(item)
     }
 
     private fun navigateToAction(action: NavDirections) {
@@ -176,6 +180,7 @@ class MainViewFragment : Fragment(), ItemListener {
 }
 
 class ShopListAdapter(
+    private val context: Context?,
     private val nameList: ArrayList<ShopItem>,
     private val listener: ItemListener
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -185,15 +190,15 @@ class ShopListAdapter(
     class ShopItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private var mItemName: CheckBox = itemView.findViewById(R.id.item_text)
         private var mDragIcon: ImageView = itemView.findViewById(R.id.drag_icon)
-        private var mRemove: ImageView = itemView.findViewById(R.id.remove_item)
+        private var mActionButton: ImageView = itemView.findViewById(R.id.item_action)
         private var mQuantity: EditText = itemView.findViewById(R.id.quantity)
 
         @SuppressLint("ClickableViewAccessibility")
-        fun bindData(item: ShopItem, listener: ItemListener) {
+        fun bindData(context: Context?, item: ShopItem, listener: ItemListener) {
             mItemName.text = item.name
             mItemName.isChecked = item.checked
             updateCheckboxView(mItemName, item.checked)
-
+            mQuantity.removeWatcher()
             mQuantity.setText(item.quantity)
             mItemName.apply {
                 setOnCheckedChangeListener { view, isChecked ->
@@ -208,22 +213,34 @@ class ShopListAdapter(
                 return@setOnTouchListener false
             }
 
-            mRemove.setOnClickListener {
-                listener.removeItem(item)
+            mActionButton.setOnClickListener {
+                val saveState = mActionButton.tag as Boolean?
+                if(saveState != null && saveState) {
+                    mActionButton.setImageDrawable(ResourcesCompat.getDrawable(context!!.resources,
+                        R.drawable.ic_baseline_close_24, context.applicationContext.theme))
+                    listener.saveQuantity(item, mQuantity.text.toString())
+                    mActionButton.tag = false
+                } else {
+                    listener.removeItem(item)
+                }
             }
 
             mQuantity.onChange {
-                listener.saveQuantity(item, it)
+                if(it.isNotEmpty() && mActionButton.tag != true) {
+                    mActionButton.tag = true
+                    mActionButton.setImageDrawable(ResourcesCompat.getDrawable(context!!.resources,
+                        R.drawable.ic_baseline_check_24, context.applicationContext.theme))
+                }
             }
         }
 
         private fun updateCheckboxView(view: CompoundButton, isChecked: Boolean) {
             if (isChecked) {
                 view.paintFlags = view.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-                view.alpha = 0.3F
+                (view.parent as View).alpha = 0.3F
             } else {
                 view.paintFlags = view.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
-                view.alpha = 1.0F
+                (view.parent as View).alpha = 1.0F
             }
         }
     }
@@ -254,7 +271,7 @@ class ShopListAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (nameList[position].type == ITEM) {
-            (holder as ShopItemViewHolder).bindData(nameList[position], listener)
+            (holder as ShopItemViewHolder).bindData(context, nameList[position], listener)
         } else {
             (holder as SectionHeadingViewHolder).bindData(nameList[position].toString())
         }
