@@ -1,6 +1,7 @@
 package com.shafeeq.shopee.fragments
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.graphics.Paint
 import android.os.Bundle
@@ -16,6 +17,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.shafeeq.shopee.MainActivity
 import com.shafeeq.shopee.R
 import com.shafeeq.shopee.utils.*
 import java.util.*
@@ -30,8 +32,17 @@ class MainViewFragment : Fragment(), ItemListener {
     private lateinit var mAddBtn: Button
     private lateinit var mInputAdapter: ItemSearchAdapter
 
+    private lateinit var mActivity: Activity
+    private var mContext: Context? = null
+
     private val mDataList = ArrayList<ShopItem>()
     private val mInputDataList = ArrayList<ShopItem>()
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        mContext = mContext ?: context
+        mActivity = mContext as Activity
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -43,7 +54,7 @@ class MainViewFragment : Fragment(), ItemListener {
         mInputActv = root.findViewById(R.id.newItemName)
         mAddBtn = root.findViewById(R.id.addBtn)
 
-        val groupId = requireActivity().getGroupId()
+        val groupId = mActivity.getGroupId()
         mAddBtn.setOnClickListener {
             var shopItem = ShopItem(name = mInputActv.text.toString().trim(), type = ITEM)
             if(shopItem.name.trim().isEmpty()) return@setOnClickListener
@@ -61,7 +72,7 @@ class MainViewFragment : Fragment(), ItemListener {
             mInputActv.setText("")
         }
 
-        mShopItemList.layoutManager = LinearLayoutManager(requireActivity())
+        mShopItemList.layoutManager = LinearLayoutManager(mActivity)
         mAdapter = ShopListAdapter(mDataList, this)
         mShopItemList.adapter = mAdapter
 
@@ -91,7 +102,7 @@ class MainViewFragment : Fragment(), ItemListener {
         for(data in snapshot.children) {
             mInputDataList.add(data.getValue(ShopItem::class.java)!!)
         }
-        mInputAdapter = ItemSearchAdapter(requireContext(), mInputDataList)
+        mInputAdapter = ItemSearchAdapter(mContext!!, mInputDataList)
         mInputActv.setAdapter(mInputAdapter)
     }
 
@@ -112,14 +123,12 @@ class MainViewFragment : Fragment(), ItemListener {
         mShopItemList.post { mAdapter.notifyDataSetChanged() }
     }
 
-    override fun getContext(): Context? {
-        return requireActivity().applicationContext
-    }
-
     override fun onChecked(name: String, position: Int, isChecked: Boolean) {
+        if(position < 0)
+            return
         val item = mDataList[position]
         item.checked = isChecked
-        val groupId = requireActivity().getGroupId()
+        val groupId = mActivity.getGroupId()
         FirebaseDatabase.getInstance().getReference("$groupId/itemList/${item.id}").setValue(item)
     }
 
@@ -149,7 +158,7 @@ class MainViewFragment : Fragment(), ItemListener {
     }
 
     override fun removeItem(item: ShopItem) {
-        val groupId = requireActivity().getGroupId()
+        val groupId = mActivity.getGroupId()
         item.purchase = false
         FirebaseDatabase.getInstance().getReference("$groupId/itemList/${item.id}").setValue(item)
 
@@ -159,7 +168,7 @@ class MainViewFragment : Fragment(), ItemListener {
     }
 
     private fun navigateToAction(action: NavDirections) {
-        val navHostFragment = requireActivity().supportFragmentManager
+        val navHostFragment = (mActivity as MainActivity).supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
         navController.navigate(action)
