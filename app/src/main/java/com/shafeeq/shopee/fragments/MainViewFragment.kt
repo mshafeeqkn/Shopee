@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
 import android.graphics.Paint
 import android.os.Bundle
 import android.util.Log
@@ -183,7 +181,6 @@ class MainViewFragment : Fragment(), ItemListener {
         val dataMap = HashMap<String, ShopItem>()
         for(data in mInputDataList) {
             if(data.type == SECT) continue
-            Log.d("DEBUG_SHOPEE", "Key: ${data.id}")
             dataMap[data.id] = data
             dataMap[data.id]?.checked = check
         }
@@ -409,7 +406,7 @@ class ItemSearchAdapter(private var mContext: Context, private var mDataList: Ar
                 filteredList.addAll(completeList)
             } else {
                 val filterPattern = constraint.toString().toLowerCase(Locale.ENGLISH).trim()
-                for(item in mDataList) {
+                for(item in completeList) {
                     if(item.name.toLowerCase(Locale.ENGLISH).contains(filterPattern) ||
                         item.manglish.toLowerCase(Locale.ENGLISH).contains(filterPattern)) {
                         filteredList.add(item)
