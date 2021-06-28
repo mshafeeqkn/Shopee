@@ -13,7 +13,8 @@
         app:showAsAction="never"/>
 
     <item
-        android:id="@+id/action_clear_all"
-        android:title="Clear All List"
+        android:id="@+id/action_toggle_check_all"
+        android:title="Uncheck All"
         app:showAsAction="never"/>
+
 </menu>

@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Paint
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.*
 import androidx.core.content.res.ResourcesCompat
@@ -23,6 +24,7 @@ import com.shafeeq.shopee.R
 import com.shafeeq.shopee.utils.*
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 
 class MainViewFragment : Fragment(), ItemListener {
@@ -32,6 +34,7 @@ class MainViewFragment : Fragment(), ItemListener {
     private lateinit var mInputActv: AutoCompleteTextView
     private lateinit var mAddBtn: Button
     private lateinit var mInputAdapter: ItemSearchAdapter
+    private var mCheckAll = false
 
     private lateinit var mActivity: Activity
     private var mContext: Context? = null
@@ -136,6 +139,8 @@ class MainViewFragment : Fragment(), ItemListener {
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.main_menu, menu)
+        val checkAllItem = menu.findItem(R.id.action_toggle_check_all)
+        checkAllItem.title = (if(mCheckAll) "Uncheck" else "Check") + " All"
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -148,11 +153,25 @@ class MainViewFragment : Fragment(), ItemListener {
                 MainViewFragmentDirections.actionMainViewFragment2ToSettingsFragment()
             )
 
-            R.id.action_clear_all -> {
-
+            R.id.action_toggle_check_all -> {
+                mCheckAll = !mCheckAll
+                checkAllItems(mCheckAll)
+                mActivity.invalidateOptionsMenu()
             }
         }
         return true
+    }
+
+    private fun checkAllItems(check: Boolean) {
+        val dataMap = HashMap<String, ShopItem>()
+        for(data in mInputDataList) {
+            if(data.type == SECT) continue
+            Log.d("DEBUG_SHOPEE", "Key: ${data.id}")
+            dataMap[data.id] = data
+            dataMap[data.id]?.checked = check
+        }
+        val groupId = mActivity.getGroupId()
+        FirebaseDatabase.getInstance().getReference("$groupId/itemList").setValue(dataMap)
     }
 
     override fun requestDrag(viewHolder: RecyclerView.ViewHolder) {
@@ -188,7 +207,8 @@ class ShopListAdapter(
     private lateinit var mRecyclerView: RecyclerView
 
     class ShopItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private var mItemName: CheckBox = itemView.findViewById(R.id.item_text)
+        private var mItemCheck: CheckBox = itemView.findViewById(R.id.item_check)
+        private var mItemName: TextView = itemView.findViewById(R.id.item_label)
         private var mDragIcon: ImageView = itemView.findViewById(R.id.drag_icon)
         private var mActionButton: ImageView = itemView.findViewById(R.id.item_action)
         private var mQuantity: EditText = itemView.findViewById(R.id.quantity)
@@ -196,13 +216,12 @@ class ShopListAdapter(
         @SuppressLint("ClickableViewAccessibility")
         fun bindData(context: Context?, item: ShopItem, listener: ItemListener) {
             mItemName.text = item.name
-            mItemName.isChecked = item.checked
+            mItemCheck.isChecked = item.checked
             updateCheckboxView(mItemName, item.checked)
             mQuantity.removeWatcher()
             mQuantity.setText(item.quantity)
-            mItemName.apply {
-                setOnCheckedChangeListener { view, isChecked ->
-                    updateCheckboxView(view, isChecked)
+            mItemCheck.apply {
+                setOnCheckedChangeListener { _, isChecked ->
                     listener.onChecked(item.name, adapterPosition, isChecked)
                 }
             }
@@ -234,7 +253,7 @@ class ShopListAdapter(
             }
         }
 
-        private fun updateCheckboxView(view: CompoundButton, isChecked: Boolean) {
+        private fun updateCheckboxView(view: TextView, isChecked: Boolean) {
             if (isChecked) {
                 view.paintFlags = view.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
                 (view.parent as View).alpha = 0.3F

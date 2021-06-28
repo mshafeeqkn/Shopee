@@ -13,6 +13,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.shafeeq.shopee.R
 import com.shafeeq.shopee.utils.SharedPreferenceHelper
 import com.shafeeq.shopee.utils.onChange
+import java.util.*
 
 class JoinGroupFragment : Fragment() {
     private lateinit var mSubmitButton: Button
@@ -33,7 +34,7 @@ class JoinGroupFragment : Fragment() {
                 setOnClickListener {
                     if ((it as Button).text == "GENERATE GROUP ID") {
                         it.text = "GO AHEAD"
-                        val groupId = FirebaseDatabase.getInstance().reference.push().key.toString()
+                        val groupId = UUID.randomUUID().toString().substring(0,6)
                         mGroupIdEt.setText(groupId)
                     } else {
                         memory.setGroupId(mGroupIdEt.text.toString())

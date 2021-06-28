@@ -1,6 +1,7 @@
 package com.shafeeq.shopee.fragments
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
@@ -24,6 +25,12 @@ class FullItemListFragment : Fragment() {
     private lateinit var mFullListView: ListView
     private lateinit var mAdapter: FullShopListAdapter
     private val mShopItemList = ArrayList<ShopItem>()
+    private lateinit var mActivity: Activity
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        mActivity = context as Activity
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -31,6 +38,8 @@ class FullItemListFragment : Fragment() {
     ): View? {
         val root = inflater.inflate(R.layout.fragment_full_item_list, container, false)
         mFullListView = root.findViewById(R.id.fullShopList)
+        setHasOptionsMenu(true)
+
         val groupId = requireActivity().getGroupId()
         FirebaseDatabase.getInstance().getReference("$groupId/itemList")
             .addValueEventListener(object : ValueEventListener {
@@ -58,6 +67,26 @@ class FullItemListFragment : Fragment() {
         mFullListView.adapter = mAdapter
         return root
     }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.full_list_menu, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId) {
+            R.id.action_clear_all -> {
+                val dataMap = HashMap<String, ShopItem>()
+                for(data in mShopItemList) {
+                    if(data.type == SECT) continue
+                    dataMap[data.id] = data
+                    dataMap[data.id]?.purchase = false
+                }
+                val groupId = mActivity.getGroupId()
+                FirebaseDatabase.getInstance().getReference("$groupId/itemList").setValue(dataMap)
+            }
+        }
+        return true
+    }
 }
 
 class FullShopListAdapter(
@@ -65,17 +94,19 @@ class FullShopListAdapter(
     private var groupId: String?,
     private var mDataList: ArrayList<ShopItem>
 ) :
-    ArrayAdapter<ShopItem>(thisContext, R.layout.list_item_layout, mDataList) {
+    ArrayAdapter<ShopItem>(thisContext, R.layout.full_item_layout, mDataList) {
 
     private class ViewHolder(view: View) {
         var mItemNameCheck: CheckBox? = null
         var mSectNameTextView: TextView? = null
         var mEditImageView: ImageView? = null
+        var mItemNameLabel: TextView? = null
 
         init {
-            mItemNameCheck = view.findViewById(R.id.item_text)
+            mItemNameCheck = view.findViewById(R.id.item_check)
             mSectNameTextView = view.findViewById(R.id.section_name)
             mEditImageView = view.findViewById(R.id.edit_icon)
+            mItemNameLabel = view.findViewById(R.id.item_label)
         }
     }
 
@@ -106,10 +137,10 @@ class FullShopListAdapter(
 
         if (shopItem.type == ITEM) {
             viewHolder.mItemNameCheck?.setOnCheckedChangeListener(null)
-            viewHolder.mItemNameCheck?.text = shopItem.name
+            viewHolder.mItemNameLabel?.text = shopItem.name
             viewHolder.mItemNameCheck?.isChecked = shopItem.purchase
-            viewHolder.mItemNameCheck?.setTextColor(if(shopItem.manglish.isEmpty()) Color.RED else Color.BLACK)
-            updateCheckboxView(viewHolder.mItemNameCheck!!, shopItem.purchase)
+            viewHolder.mItemNameLabel?.setTextColor(if(shopItem.manglish.isEmpty()) Color.RED else Color.BLACK)
+            updateCheckboxView(viewHolder.mItemNameLabel!!, shopItem.purchase)
             viewHolder.mItemNameCheck?.setOnCheckedChangeListener { _, isChecked ->
                 shopItem.purchase = isChecked
 
@@ -129,13 +160,13 @@ class FullShopListAdapter(
         return view
     }
 
-    private fun updateCheckboxView(view: CompoundButton, isChecked: Boolean) {
+    private fun updateCheckboxView(view: TextView, isChecked: Boolean) {
         if (isChecked) {
             view.paintFlags = view.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-            view.alpha = 0.3F
+            (view.parent as View).alpha = 0.3F
         } else {
             view.paintFlags = view.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
-            view.alpha = 1.0F
+            (view.parent as View).alpha = 1.0F
         }
     }
 
@@ -146,6 +177,7 @@ class FullShopListAdapter(
         dialog.setContentView(R.layout.custom_layout)
         val input = dialog.findViewById<EditText>(R.id.text)
         input.setText(shopItem.manglish)
+        input.hint = shopItem.name
         val yesBtn = dialog.findViewById(R.id.yesBtn) as Button
         val noBtn = dialog.findViewById(R.id.noBtn) as TextView
         yesBtn.setOnClickListener {

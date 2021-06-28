@@ -1,6 +1,7 @@
 package com.shafeeq.shopee
 
 import android.os.Bundle
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
@@ -29,5 +30,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onSupportNavigateUp(): Boolean {
         return mNavController.navigateUp(mAppBarConfiguration) || super.onSupportNavigateUp()
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(item.itemId == android.R.id.home)
+            onBackPressed()
+        return super.onOptionsItemSelected(item)
     }
 }
