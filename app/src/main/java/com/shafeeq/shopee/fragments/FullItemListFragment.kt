@@ -2,6 +2,7 @@ package com.shafeeq.shopee.fragments
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
@@ -16,16 +17,14 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.shafeeq.shopee.R
-import com.shafeeq.shopee.utils.ITEM
-import com.shafeeq.shopee.utils.SECT
-import com.shafeeq.shopee.utils.ShopItem
-import com.shafeeq.shopee.utils.getGroupId
+import com.shafeeq.shopee.utils.*
 
 class FullItemListFragment : Fragment() {
     private lateinit var mFullListView: ListView
     private lateinit var mAdapter: FullShopListAdapter
-    private val mShopItemList = ArrayList<ShopItem>()
     private lateinit var mActivity: Activity
+    private val mShopItemList = ArrayList<ShopItem>()
+    private var mDeleteState = false
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -84,6 +83,11 @@ class FullItemListFragment : Fragment() {
                 val groupId = mActivity.getGroupId()
                 FirebaseDatabase.getInstance().getReference("$groupId/itemList").setValue(dataMap)
             }
+
+            R.id.action_delete -> {
+                mDeleteState = !mDeleteState
+                mAdapter.notifyDataSetChanged(mDeleteState)
+            }
         }
         return true
     }
@@ -96,16 +100,18 @@ class FullShopListAdapter(
 ) :
     ArrayAdapter<ShopItem>(thisContext, R.layout.full_item_layout, mDataList) {
 
+    private var mDeleteState: Boolean = false
+
     private class ViewHolder(view: View) {
         var mItemNameCheck: CheckBox? = null
         var mSectNameTextView: TextView? = null
-        var mEditImageView: ImageView? = null
+        var mActionIcon: ImageView? = null
         var mItemNameLabel: TextView? = null
 
         init {
             mItemNameCheck = view.findViewById(R.id.item_check)
             mSectNameTextView = view.findViewById(R.id.section_name)
-            mEditImageView = view.findViewById(R.id.edit_icon)
+            mActionIcon = view.findViewById(R.id.action_icon)
             mItemNameLabel = view.findViewById(R.id.item_label)
         }
     }
@@ -141,6 +147,10 @@ class FullShopListAdapter(
             viewHolder.mItemNameCheck?.isChecked = shopItem.purchase
             viewHolder.mItemNameLabel?.setTextColor(if(shopItem.manglish.isEmpty()) Color.RED else Color.BLACK)
             updateCheckboxView(viewHolder.mItemNameLabel!!, shopItem.purchase)
+            if(mDeleteState)
+                viewHolder.mActionIcon?.setSrc(context, R.drawable.ic_baseline_close_24)
+            else
+                viewHolder.mActionIcon?.setSrc(context, R.drawable.ic_baseline_edit_24)
             viewHolder.mItemNameCheck?.setOnCheckedChangeListener { _, isChecked ->
                 shopItem.purchase = isChecked
 
@@ -150,8 +160,12 @@ class FullShopListAdapter(
                 FirebaseDatabase.getInstance().getReference("$groupId/itemList/${shopItem.id}").setValue(shopItem)
             }
 
-            viewHolder.mEditImageView?.setOnClickListener {
-                showDialog(shopItem)
+            viewHolder.mActionIcon?.setOnClickListener {
+                if(mDeleteState) {
+                    showDeleteDialog(shopItem)
+                } else {
+                    showEditDialog(shopItem)
+                }
             }
         } else {
             viewHolder.mSectNameTextView?.text = shopItem.name
@@ -170,7 +184,20 @@ class FullShopListAdapter(
         }
     }
 
-    private fun showDialog(shopItem: ShopItem) {
+    private fun showDeleteDialog(shopItem: ShopItem) {
+        val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(context)
+        alertDialogBuilder.setMessage("Are you really want to delete?")
+        alertDialogBuilder.setCancelable(true)
+        alertDialogBuilder.setPositiveButton("OK") { dialog, _ ->
+            notifyDataSetChanged(false)
+            FirebaseDatabase.getInstance().getReference("$groupId/itemList/${shopItem.id}").setValue(null)
+            dialog.cancel()
+        }
+        val alertDialog: AlertDialog = alertDialogBuilder.create()
+        alertDialog.show()
+    }
+
+    private fun showEditDialog(shopItem: ShopItem) {
         val dialog = Dialog(thisContext)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setCancelable(false)
@@ -189,5 +216,10 @@ class FullShopListAdapter(
         dialog.show()
         val window: Window? = dialog.window
         window?.setLayout(Constraints.LayoutParams.MATCH_PARENT, Constraints.LayoutParams.WRAP_CONTENT)
+    }
+
+    fun notifyDataSetChanged(delete: Boolean) {
+        mDeleteState = delete
+        notifyDataSetChanged()
     }
 }

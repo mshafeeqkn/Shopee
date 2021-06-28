@@ -5,7 +5,9 @@ import android.content.Context
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.Toast
+import androidx.core.content.res.ResourcesCompat
 import com.shafeeq.shopee.fragments.ItemListener
 import org.w3c.dom.Text
 
@@ -36,4 +38,8 @@ fun EditText.removeWatcher() {
 
 fun Activity.getGroupId(): String? {
     return SharedPreferenceHelper(this).getGroupId()
+}
+
+fun ImageView.setSrc(context: Context, id: Int) {
+    this.setImageDrawable(ResourcesCompat.getDrawable(context.resources, id, context.applicationContext.theme))
 }

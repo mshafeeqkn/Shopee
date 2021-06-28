@@ -3,12 +3,14 @@ package com.shafeeq.shopee.fragments
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import android.graphics.Paint
 import android.os.Bundle
 import android.util.Log
 import android.view.*
 import android.widget.*
-import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.NavHostFragment
@@ -158,6 +160,21 @@ class MainViewFragment : Fragment(), ItemListener {
                 checkAllItems(mCheckAll)
                 mActivity.invalidateOptionsMenu()
             }
+
+            R.id.action_share -> {
+                var strMsg = ""
+                for(i in mDataList) {
+                    if(i.type == SECT) continue
+                    strMsg = "$strMsg\n* ${i.name} - ${i.quantity}"
+                }
+
+                val waIntent = Intent(Intent.ACTION_SEND)
+                waIntent.type = "text/plain"
+                val text = strMsg
+                waIntent.setPackage("com.whatsapp")
+                waIntent.putExtra(Intent.EXTRA_TEXT, text)
+                startActivity(Intent.createChooser(waIntent, "Share with"))
+            }
         }
         return true
     }
@@ -235,8 +252,7 @@ class ShopListAdapter(
             mActionButton.setOnClickListener {
                 val saveState = mActionButton.tag as Boolean?
                 if(saveState != null && saveState) {
-                    mActionButton.setImageDrawable(ResourcesCompat.getDrawable(context!!.resources,
-                        R.drawable.ic_baseline_close_24, context.applicationContext.theme))
+                    mActionButton.setSrc(context!!, R.drawable.ic_baseline_close_24)
                     listener.saveQuantity(item, mQuantity.text.toString())
                     mActionButton.tag = false
                 } else {
@@ -247,8 +263,7 @@ class ShopListAdapter(
             mQuantity.onChange {
                 if(it.isNotEmpty() && mActionButton.tag != true) {
                     mActionButton.tag = true
-                    mActionButton.setImageDrawable(ResourcesCompat.getDrawable(context!!.resources,
-                        R.drawable.ic_baseline_check_24, context.applicationContext.theme))
+                    mActionButton.setSrc(context!!, R.drawable.ic_baseline_check_24)
                 }
             }
         }

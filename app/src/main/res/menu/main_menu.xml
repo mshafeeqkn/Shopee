@@ -17,4 +17,9 @@
         android:title="Uncheck All"
         app:showAsAction="never"/>
 
+    <item
+        android:id="@+id/action_share"
+        android:title="Share"
+        app:showAsAction="never"/>
+
 </menu>
