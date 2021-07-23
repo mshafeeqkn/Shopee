@@ -43,3 +43,12 @@ fun Activity.getGroupId(): String? {
 fun ImageView.setSrc(context: Context, id: Int) {
     this.setImageDrawable(ResourcesCompat.getDrawable(context.resources, id, context.applicationContext.theme))
 }
+
+fun String.isMalayalam(): Boolean {
+    for(c in this.toCharArray()) {
+        if(Character.UnicodeBlock.of(c) == Character.UnicodeBlock.MALAYALAM) {
+            return true
+        }
+    }
+    return false
+}

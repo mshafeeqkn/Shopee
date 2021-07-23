@@ -39,32 +39,48 @@ class FullItemListFragment : Fragment() {
         mFullListView = root.findViewById(R.id.fullShopList)
         setHasOptionsMenu(true)
 
-        val groupId = requireActivity().getGroupId()
+        val groupId = mActivity.getGroupId()
         FirebaseDatabase.getInstance().getReference("$groupId/itemList")
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     mShopItemList.clear()
-                    mShopItemList.add(ShopItem(name = "Non-Purchased Item", type = SECT))
+                    mShopItemList.add(ShopItem(malayalam = "Non-Purchased Item", type = SECT))
                     for (data in snapshot.children) {
                         val item = data.getValue(ShopItem::class.java)!!
-                        if (!item.purchase)
+                        if (!item.purchase) {
+                            if(item.name != null && item.name?.isMalayalam() != true) { item.swapContent() }
                             mShopItemList.add(item)
+                        }
                     }
-                    mShopItemList.add(ShopItem(name = "Purchased Item", type = SECT))
+                    mShopItemList.add(ShopItem(malayalam = "Purchased Item", type = SECT))
                     for (data in snapshot.children) {
                         val item = data.getValue(ShopItem::class.java)!!
-                        if (item.purchase)
+                        if (item.purchase) {
+                            if(item.name != null && item.name?.isMalayalam() != true) { item.swapContent() }
                             mShopItemList.add(item)
+                        }
                     }
+                    deleteDuplicates()
                     mAdapter.notifyDataSetChanged()
                 }
 
                 override fun onCancelled(error: DatabaseError) {}
 
             })
-        mAdapter = FullShopListAdapter(requireContext(), groupId, mShopItemList)
+        mAdapter = FullShopListAdapter(mActivity, groupId, mShopItemList)
         mFullListView.adapter = mAdapter
         return root
+    }
+
+    private fun deleteDuplicates() {
+        val distinctList = mShopItemList.toSet().toList() as ArrayList
+        val map = HashMap<String, ShopItem>()
+        for(item in distinctList) {
+            if(item.id.isEmpty()) continue
+            map[item.id] = item
+        }
+        val groupId = mActivity.getGroupId()
+        FirebaseDatabase.getInstance().getReference("$groupId/itemList").setValue(map)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -120,7 +136,7 @@ class FullShopListAdapter(
 
     override fun getViewTypeCount() = 2
 
-    @SuppressLint("InflateParams")
+    @SuppressLint("InflateParams", "SetTextI18n")
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val view: View
         val viewHolder: ViewHolder
@@ -143,14 +159,17 @@ class FullShopListAdapter(
 
         if (shopItem.type == ITEM) {
             viewHolder.mItemNameCheck?.setOnCheckedChangeListener(null)
-            viewHolder.mItemNameLabel?.text = shopItem.name
+            viewHolder.mItemNameLabel?.text = shopItem.toString()
+            viewHolder.mItemNameLabel?.setOnClickListener { showEditDialog(shopItem) }
             viewHolder.mItemNameCheck?.isChecked = shopItem.purchase
-            viewHolder.mItemNameLabel?.setTextColor(if(shopItem.manglish.isEmpty()) Color.RED else Color.BLACK)
+            viewHolder.mItemNameLabel?.setTextColor(if(shopItem.manglish.isEmpty() || shopItem.malayalam.isEmpty()) Color.RED else Color.BLACK)
             updateCheckboxView(viewHolder.mItemNameLabel!!, shopItem.purchase)
-            if(mDeleteState)
+            if(mDeleteState) {
+                viewHolder.mActionIcon?.visibility = View.VISIBLE
                 viewHolder.mActionIcon?.setSrc(context, R.drawable.ic_baseline_close_24)
-            else
-                viewHolder.mActionIcon?.setSrc(context, R.drawable.ic_baseline_edit_24)
+            } else
+                viewHolder.mActionIcon?.visibility = View.GONE
+
             viewHolder.mItemNameCheck?.setOnCheckedChangeListener { _, isChecked ->
                 shopItem.purchase = isChecked
 
@@ -163,12 +182,11 @@ class FullShopListAdapter(
             viewHolder.mActionIcon?.setOnClickListener {
                 if(mDeleteState) {
                     showDeleteDialog(shopItem)
-                } else {
-                    showEditDialog(shopItem)
                 }
             }
         } else {
-            viewHolder.mSectNameTextView?.text = shopItem.name
+            val count = mDataList.filter { it.type != SECT && it.purchase != shopItem.malayalam.contains("Non") }.size
+            viewHolder.mSectNameTextView?.text = "${shopItem.malayalam} ($count items)"
         }
 
         return view
@@ -202,13 +220,16 @@ class FullShopListAdapter(
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setCancelable(false)
         dialog.setContentView(R.layout.custom_layout)
-        val input = dialog.findViewById<EditText>(R.id.text)
-        input.setText(shopItem.manglish)
-        input.hint = shopItem.name
+        val manglishInput = dialog.findViewById<EditText>(R.id.text1)
+        val malayalamInput = dialog.findViewById<EditText>(R.id.text2)
+
+        manglishInput.setText(shopItem.manglish)
+        malayalamInput.setText(shopItem.name ?: shopItem.malayalam)
         val yesBtn = dialog.findViewById(R.id.yesBtn) as Button
         val noBtn = dialog.findViewById(R.id.noBtn) as TextView
         yesBtn.setOnClickListener {
-            shopItem.manglish = input.text.toString()
+            shopItem.manglish = manglishInput.text.toString()
+            shopItem.malayalam = malayalamInput.text.toString()
             FirebaseDatabase.getInstance().getReference("$groupId/itemList/${shopItem.id}").setValue(shopItem)
             dialog.dismiss()
         }

@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Paint
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import android.widget.*
 import androidx.fragment.app.Fragment
@@ -60,8 +59,8 @@ class MainViewFragment : Fragment(), ItemListener {
 
         val groupId = mActivity.getGroupId()
         mAddBtn.setOnClickListener {
-            var shopItem = ShopItem(name = mInputActv.text.toString().trim(), type = ITEM)
-            if(shopItem.name.trim().isEmpty()) return@setOnClickListener
+            var shopItem = ShopItem(malayalam = mInputActv.text.toString().trim(), type = ITEM)
+            if(shopItem.malayalam.trim().isEmpty()) return@setOnClickListener
 
             if(mInputDataList.contains(shopItem)) {
                 shopItem = mInputDataList[mInputDataList.indexOf(shopItem)]
@@ -113,13 +112,13 @@ class MainViewFragment : Fragment(), ItemListener {
 
     private fun loadListViewItems(snapshot: DataSnapshot) {
         mDataList.clear()
-        mDataList.add(ShopItem(name = "Non-Purchased Item", type = SECT))
+        mDataList.add(ShopItem(malayalam = "Non-Purchased Item", type = SECT))
         for (data in snapshot.children) {
             val item = data.getValue(ShopItem::class.java)!!
             if (item.purchase && !item.checked)
                 mDataList.add(item)
         }
-        mDataList.add(ShopItem(name = "Purchased Item", type = SECT))
+        mDataList.add(ShopItem(malayalam = "Purchased Item", type = SECT))
         for (data in snapshot.children) {
             val item = data.getValue(ShopItem::class.java)!!
             if (item.purchase && item.checked)
@@ -163,7 +162,7 @@ class MainViewFragment : Fragment(), ItemListener {
                 var strMsg = ""
                 for(i in mDataList) {
                     if(i.type == SECT) continue
-                    strMsg = "$strMsg\n* ${i.name} - ${i.quantity}"
+                    strMsg = "$strMsg\n* ${i.malayalam} - ${i.quantity}"
                 }
 
                 val waIntent = Intent(Intent.ACTION_SEND)
@@ -229,14 +228,14 @@ class ShopListAdapter(
 
         @SuppressLint("ClickableViewAccessibility")
         fun bindData(context: Context?, item: ShopItem, listener: ItemListener) {
-            mItemName.text = item.name
+            mItemName.text = item.malayalam
             mItemCheck.isChecked = item.checked
             updateCheckboxView(mItemName, item.checked)
             mQuantity.removeWatcher()
             mQuantity.setText(item.quantity)
             mItemCheck.apply {
                 setOnCheckedChangeListener { _, isChecked ->
-                    listener.onChecked(item.name, adapterPosition, isChecked)
+                    listener.onChecked(item.malayalam, adapterPosition, isChecked)
                 }
             }
             mDragIcon.setOnTouchListener { _, event ->
@@ -388,7 +387,7 @@ class ItemSearchAdapter(private var mContext: Context, private var mDataList: Ar
             view = convertView
             viewHolder = view.tag as ViewHolder
         }
-        viewHolder.name?.text = item.name
+        viewHolder.name?.text = item.malayalam
         return view
     }
 
@@ -407,7 +406,7 @@ class ItemSearchAdapter(private var mContext: Context, private var mDataList: Ar
             } else {
                 val filterPattern = constraint.toString().toLowerCase(Locale.ENGLISH).trim()
                 for(item in completeList) {
-                    if(item.name.toLowerCase(Locale.ENGLISH).contains(filterPattern) ||
+                    if(item.malayalam.toLowerCase(Locale.ENGLISH).contains(filterPattern) ||
                         item.manglish.toLowerCase(Locale.ENGLISH).contains(filterPattern)) {
                         filteredList.add(item)
                     }
@@ -419,7 +418,7 @@ class ItemSearchAdapter(private var mContext: Context, private var mDataList: Ar
         }
 
         override fun convertResultToString(resultValue: Any?): CharSequence {
-            return (resultValue as ShopItem).name
+            return (resultValue as ShopItem).malayalam
         }
 
         override fun publishResults(constraint: CharSequence?, results: FilterResults?) {

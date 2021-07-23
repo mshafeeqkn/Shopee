@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -26,12 +27,22 @@
         android:inputType="textCapWords"
         android:hint="English/Manglish Name(comma separated)"
         android:textSize="14sp"
-        android:id="@+id/text"/>
+        android:id="@+id/text1"/>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/text1"
+        android:layout_margin="5dp"
+        android:inputType="textCapWords"
+        android:hint="Malayalam"
+        android:textSize="14sp"
+        android:id="@+id/text2"/>
 
     <Button
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/text"
+        app:layout_constraintTop_toBottomOf="@id/text2"
         android:id="@+id/noBtn"
         android:layout_margin="5dp"
         android:text="Cancel"
@@ -42,9 +53,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_margin="5dp"
         android:text="Submit"
-        app:layout_constraintTop_toBottomOf="@id/text"
+        app:layout_constraintTop_toTopOf="@id/noBtn"
         app:layout_constraintStart_toEndOf="@id/noBtn"
         android:id="@+id/yesBtn"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

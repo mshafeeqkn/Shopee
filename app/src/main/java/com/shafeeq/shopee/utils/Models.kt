@@ -2,14 +2,13 @@ package com.shafeeq.shopee.utils
 
 
 const val ITEM = 0
-
-@Suppress("unused")
 const val SECT = 1
 
 
 data class ShopItem(
-    var name: String = "",
+    var malayalam: String = "",
     var manglish: String = "",
+    var name: String? = null,
     var type: Int = ITEM,
     var id: String = "",
     var checked: Boolean = false,
@@ -17,15 +16,28 @@ data class ShopItem(
     var quantity: String = ""
 ) {
     override fun toString(): String {
-        return name
+        return name ?: if(malayalam.isNotEmpty()) malayalam else manglish
     }
 
     override fun equals(other: Any?): Boolean {
-        return (other as ShopItem).name == name
+        other as ShopItem
+        return other.getKey() == getKey()
     }
 
     override fun hashCode(): Int {
-        return name.hashCode()
+        return getKey().hashCode()
     }
 
+    fun getKey(): String {
+        return if(malayalam.isNotEmpty())
+            malayalam.filter { !it.isWhitespace() }
+        else manglish.filter { !it.isWhitespace() }
+    }
+
+    fun swapContent() {
+        val tmp = name ?: malayalam
+        malayalam = manglish
+        manglish = tmp
+        name = null
+    }
 }
