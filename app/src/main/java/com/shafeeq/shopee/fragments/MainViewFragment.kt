@@ -228,7 +228,7 @@ class ShopListAdapter(
 
         @SuppressLint("ClickableViewAccessibility")
         fun bindData(context: Context?, item: ShopItem, listener: ItemListener) {
-            mItemName.text = item.malayalam
+            mItemName.text = item.toString()
             mItemCheck.isChecked = item.checked
             updateCheckboxView(mItemName, item.checked)
             mQuantity.removeWatcher()
@@ -362,8 +362,10 @@ class ItemSearchAdapter(private var mContext: Context, private var mDataList: Ar
 
     private class ViewHolder(view: View?) {
         var name: TextView? = null
+        var english: TextView? = null
         init {
             name = view?.findViewById(R.id.itemNameText)
+            english = view?.findViewById(R.id.itemEnglishText)
         }
     }
 
@@ -388,6 +390,7 @@ class ItemSearchAdapter(private var mContext: Context, private var mDataList: Ar
             viewHolder = view.tag as ViewHolder
         }
         viewHolder.name?.text = item.malayalam
+        viewHolder.english?.text = if(item.manglish.isNotEmpty()) "(${item.manglish})" else ""
         return view
     }
 

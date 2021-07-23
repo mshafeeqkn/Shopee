@@ -48,7 +48,9 @@ class FullItemListFragment : Fragment() {
                     for (data in snapshot.children) {
                         val item = data.getValue(ShopItem::class.java)!!
                         if (!item.purchase) {
-                            if(item.name != null && item.name?.isMalayalam() != true) { item.swapContent() }
+                            if((item.name != null && item.name?.isMalayalam() != true) ||
+                                (item.name == null && item.malayalam.isNotEmpty() && !item.malayalam.isMalayalam()))
+                                { item.swapContent() }
                             mShopItemList.add(item)
                         }
                     }
@@ -56,7 +58,10 @@ class FullItemListFragment : Fragment() {
                     for (data in snapshot.children) {
                         val item = data.getValue(ShopItem::class.java)!!
                         if (item.purchase) {
-                            if(item.name != null && item.name?.isMalayalam() != true) { item.swapContent() }
+
+                            if((item.name != null && item.name?.isMalayalam() != true) ||
+                                (item.name == null && item.malayalam.isNotEmpty() && !item.malayalam.isMalayalam()))
+                                { item.swapContent() }
                             mShopItemList.add(item)
                         }
                     }
