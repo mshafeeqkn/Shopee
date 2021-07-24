@@ -19,6 +19,7 @@ import com.google.firebase.database.ValueEventListener
 import com.shafeeq.shopee.R
 import com.shafeeq.shopee.utils.*
 
+
 class FullItemListFragment : Fragment() {
     private lateinit var mFullListView: ListView
     private lateinit var mAdapter: FullShopListAdapter
@@ -72,6 +73,7 @@ class FullItemListFragment : Fragment() {
                 override fun onCancelled(error: DatabaseError) {}
 
             })
+
         mAdapter = FullShopListAdapter(mActivity, groupId, mShopItemList)
         mFullListView.adapter = mAdapter
         return root
@@ -120,7 +122,24 @@ class FullShopListAdapter(
     private var mDataList: ArrayList<ShopItem>
 ) :
     ArrayAdapter<ShopItem>(thisContext, R.layout.full_item_layout, mDataList) {
+    private var mCategoryList = ArrayList<CategoryItem>()
 
+    init {
+        FirebaseDatabase.getInstance().getReference("categories")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    mCategoryList.clear()
+                    for(item in snapshot.children) {
+                        item.getValue(String::class.java)?.let {
+                            mCategoryList.add(CategoryItem(id = item.key, name = it))
+                        }
+                    }
+                    thisContext.toast("${mCategoryList.size} Categories loaded")
+                }
+
+                override fun onCancelled(error: DatabaseError) {}
+            })
+    }
     private var mDeleteState: Boolean = false
 
     private class ViewHolder(view: View) {
@@ -220,6 +239,17 @@ class FullShopListAdapter(
         alertDialog.show()
     }
 
+    private fun getIndex(string: String?): Int {
+        if(string == null)
+            return mCategoryList.size - 1
+
+        mCategoryList.forEachIndexed { index, categoryItem ->
+            if(categoryItem.name == string || categoryItem.id == string)
+                return index
+        }
+        return mCategoryList.size - 1
+    }
+
     private fun showEditDialog(shopItem: ShopItem) {
         val dialog = Dialog(thisContext)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -227,14 +257,20 @@ class FullShopListAdapter(
         dialog.setContentView(R.layout.custom_layout)
         val manglishInput = dialog.findViewById<EditText>(R.id.text1)
         val malayalamInput = dialog.findViewById<EditText>(R.id.text2)
+        val category = dialog.findViewById<Spinner>(R.id.text3)
+        val adapter = ArrayAdapter(thisContext, android.R.layout.simple_list_item_1, mCategoryList)
+        category.adapter = adapter
 
         manglishInput.setText(shopItem.manglish)
         malayalamInput.setText(shopItem.name ?: shopItem.malayalam)
+        category.setSelection(getIndex(shopItem.category))
+
         val yesBtn = dialog.findViewById(R.id.yesBtn) as Button
         val noBtn = dialog.findViewById(R.id.noBtn) as TextView
         yesBtn.setOnClickListener {
             shopItem.manglish = manglishInput.text.toString()
             shopItem.malayalam = malayalamInput.text.toString()
+            shopItem.category = mCategoryList[category.selectedItemPosition].id
             FirebaseDatabase.getInstance().getReference("$groupId/itemList/${shopItem.id}").setValue(shopItem)
             dialog.dismiss()
         }

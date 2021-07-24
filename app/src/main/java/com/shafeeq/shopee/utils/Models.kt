@@ -13,7 +13,8 @@ data class ShopItem(
     var id: String = "",
     var checked: Boolean = false,
     var purchase: Boolean = true,
-    var quantity: String = ""
+    var quantity: String = "",
+    var category: String? = "1010"
 ) {
     override fun toString(): String {
         return name ?: if(malayalam.isNotEmpty()) malayalam else manglish
@@ -39,5 +40,14 @@ data class ShopItem(
         malayalam = manglish
         manglish = tmp
         name = null
+    }
+}
+
+data class CategoryItem(
+    var name: String,
+    var id: String?
+) {
+    override fun toString(): String {
+        return name
     }
 }
