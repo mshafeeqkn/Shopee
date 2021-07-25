@@ -74,7 +74,6 @@ class FullItemListFragment : Fragment() {
                     }
                     deleteDuplicates()
                     mAdapter.notifyDataSetChanged(false)
-                    mActivity.toast("Data loaded")
                 }
 
                 override fun onCancelled(error: DatabaseError) {}
@@ -168,7 +167,6 @@ class FullItemListFragment : Fragment() {
                 mItemNameLabel = view.findViewById(R.id.item_label)
             }
         }
-
 
         @SuppressLint("InflateParams")
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
@@ -343,20 +341,20 @@ class FullItemListFragment : Fragment() {
             val manglishInput = dialog.findViewById<EditText>(R.id.text1)
             val malayalamInput = dialog.findViewById<EditText>(R.id.text2)
             val category = dialog.findViewById<Spinner>(R.id.text3)
-            val adapter =
-                ArrayAdapter(thisContext, android.R.layout.simple_list_item_1, mCategoryList)
+            val dataList = mCategoryList.filter { it.id != "1" }
+            val adapter = ArrayAdapter(thisContext, android.R.layout.simple_list_item_1, dataList)
             category.adapter = adapter
 
             manglishInput.setText(shopItem.manglish)
             malayalamInput.setText(shopItem.name ?: shopItem.malayalam)
-            category.setSelection(getIndex(shopItem.category))
+            category.setSelection(getIndex(shopItem.category) - 1)
 
             val yesBtn = dialog.findViewById(R.id.yesBtn) as Button
             val noBtn = dialog.findViewById(R.id.noBtn) as TextView
             yesBtn.setOnClickListener {
                 shopItem.manglish = manglishInput.text.toString()
                 shopItem.malayalam = malayalamInput.text.toString()
-                shopItem.category = mCategoryList[category.selectedItemPosition].id
+                shopItem.category = mCategoryList[category.selectedItemPosition + 1].id
                 FirebaseDatabase.getInstance().getReference("$groupId/itemList/${shopItem.id}")
                     .setValue(shopItem)
                 dialog.dismiss()
