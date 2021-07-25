@@ -4,11 +4,17 @@
 
     <item
         android:id="@+id/action_clear_all"
-        android:title="Clear ALl"
+        android:title="Clear All"
         app:showAsAction="never"/>
 
     <item
         android:id="@+id/action_delete"
         android:title="Delete"
         app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/action_filter"
+        android:title="Filter"
+        app:showAsAction="never"/>
+
 </menu>

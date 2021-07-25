@@ -88,11 +88,13 @@ class MainViewFragment : Fragment(), ItemListener {
         mTouchHelper = ItemTouchHelper(callback)
         mTouchHelper.attachToRecyclerView(mShopItemList)
 
+        mActivity.toast("Main list initiated")
         FirebaseDatabase.getInstance().getReference("$groupId/itemList")
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     loadListViewItems(snapshot)
                     loadInputAutocompleteList(snapshot)
+                    mActivity.toast("Main list loaded")
                 }
 
                 override fun onCancelled(error: DatabaseError) {}

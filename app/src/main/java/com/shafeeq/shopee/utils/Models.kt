@@ -45,7 +45,8 @@ data class ShopItem(
 
 data class CategoryItem(
     var name: String,
-    var id: String?
+    var id: String?,
+    var display: Boolean = true
 ) {
     override fun toString(): String {
         return name
