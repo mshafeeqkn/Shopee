@@ -133,7 +133,7 @@ class FullItemListFragment : Fragment() {
                 val dialog = Dialog(mActivity)
                 dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
                 dialog.setCancelable(false)
-                dialog.setContentView(R.layout.filter_layout)
+                dialog.setContentView(R.layout.filter_dialog)
                 val categoryList = dialog.findViewById<ListView>(R.id.category_list)
                 val adapter = DialogCategoryAdapter(mActivity)
                 categoryList.adapter = adapter
@@ -155,7 +155,7 @@ class FullItemListFragment : Fragment() {
 
     inner class DialogCategoryAdapter(
         thisContext: Context,
-    ) : ArrayAdapter<CategoryItem>(thisContext, R.layout.full_item_layout, mCategoryList) {
+    ) : ArrayAdapter<CategoryItem>(thisContext, R.layout.shop_item_checkbox, mCategoryList) {
         private inner class ViewHolder(view: View) {
             var mItemNameCheck: CheckBox? = null
             var mActionIcon: ImageView? = null
@@ -177,7 +177,7 @@ class FullItemListFragment : Fragment() {
             if (convertView == null) {
                 view =
                     (context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(
-                        R.layout.full_item_layout,
+                        R.layout.shop_item_checkbox,
                         null
                     )
                 viewHolder = ViewHolder(view)
@@ -189,6 +189,7 @@ class FullItemListFragment : Fragment() {
 
             viewHolder.mActionIcon?.visibility = View.GONE
             viewHolder.mItemNameLabel?.text = item.name
+            viewHolder.mItemNameCheck?.setOnCheckedChangeListener(null)
             viewHolder.mItemNameCheck?.isChecked = mCategoryList[position + 1].display
             viewHolder.mItemNameCheck?.setOnCheckedChangeListener { _, isChecked ->
                 mCategoryList[position + 1].display = isChecked
@@ -207,7 +208,7 @@ class FullItemListFragment : Fragment() {
         private var groupId: String?,
         private var mDataList: ArrayList<ShopItem>
     ) :
-        ArrayAdapter<ShopItem>(thisContext, R.layout.full_item_layout, mDataList) {
+        ArrayAdapter<ShopItem>(thisContext, R.layout.shop_item_checkbox, mDataList) {
 
         init {
             FirebaseDatabase.getInstance().getReference("categories")
@@ -257,7 +258,7 @@ class FullItemListFragment : Fragment() {
                 val inflater =
                     context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
                 view = if (shopItem.type == ITEM) {
-                    inflater.inflate(R.layout.full_item_layout, null)
+                    inflater.inflate(R.layout.shop_item_checkbox, null)
                 } else {
                     inflater.inflate(R.layout.shop_list_seperator, null)
                 }
@@ -337,7 +338,7 @@ class FullItemListFragment : Fragment() {
             val dialog = Dialog(thisContext)
             dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
             dialog.setCancelable(false)
-            dialog.setContentView(R.layout.custom_layout)
+            dialog.setContentView(R.layout.shop_item_edit_dialog)
             val manglishInput = dialog.findViewById<EditText>(R.id.text1)
             val malayalamInput = dialog.findViewById<EditText>(R.id.text2)
             val category = dialog.findViewById<Spinner>(R.id.text3)

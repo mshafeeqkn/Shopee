@@ -60,9 +60,9 @@ class MainViewFragment : Fragment(), ItemListener {
         val groupId = mActivity.getGroupId()
         mAddBtn.setOnClickListener {
             var shopItem = ShopItem(malayalam = mInputActv.text.toString().trim(), type = ITEM)
-            if(shopItem.malayalam.trim().isEmpty()) return@setOnClickListener
+            if (shopItem.malayalam.trim().isEmpty()) return@setOnClickListener
 
-            if(mInputDataList.contains(shopItem)) {
+            if (mInputDataList.contains(shopItem)) {
                 shopItem = mInputDataList[mInputDataList.indexOf(shopItem)]
                 shopItem.purchase = true
                 shopItem.checked = false
@@ -103,7 +103,7 @@ class MainViewFragment : Fragment(), ItemListener {
 
     private fun loadInputAutocompleteList(snapshot: DataSnapshot) {
         mInputDataList.clear()
-        for(data in snapshot.children) {
+        for (data in snapshot.children) {
             mInputDataList.add(data.getValue(ShopItem::class.java)!!)
         }
         mInputAdapter = ItemSearchAdapter(mContext!!, mInputDataList)
@@ -113,22 +113,29 @@ class MainViewFragment : Fragment(), ItemListener {
     private fun loadListViewItems(snapshot: DataSnapshot) {
         mDataList.clear()
         mDataList.add(ShopItem(malayalam = "Non-Purchased Item", type = SECT))
+        val tmpList = arrayListOf<ShopItem>()
         for (data in snapshot.children) {
             val item = data.getValue(ShopItem::class.java)!!
             if (item.purchase && !item.checked)
-                mDataList.add(item)
+                tmpList.add(item)
         }
+        tmpList.sortBy { it.category }
+        mDataList.addAll(tmpList)
+
         mDataList.add(ShopItem(malayalam = "Purchased Item", type = SECT))
+        tmpList.clear()
         for (data in snapshot.children) {
             val item = data.getValue(ShopItem::class.java)!!
             if (item.purchase && item.checked)
-                mDataList.add(item)
+                tmpList.add(item)
         }
+        tmpList.sortBy { it.category }
+        mDataList.addAll(tmpList)
         mShopItemList.post { mAdapter.notifyDataSetChanged() }
     }
 
     override fun onChecked(name: String, position: Int, isChecked: Boolean) {
-        if(position < 0)
+        if (position < 0)
             return
         val item = mDataList[position]
         item.checked = isChecked
@@ -139,11 +146,11 @@ class MainViewFragment : Fragment(), ItemListener {
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.main_menu, menu)
         val checkAllItem = menu.findItem(R.id.action_toggle_check_all)
-        checkAllItem.title = (if(mCheckAll) "Uncheck" else "Check") + " All"
+        checkAllItem.title = (if (mCheckAll) "Uncheck" else "Check") + " All"
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when(item.itemId) {
+        when (item.itemId) {
             R.id.action_full_list -> navigateToAction(
                 MainViewFragmentDirections.actionMainViewFragment2ToFullItemList2()
             )
@@ -160,8 +167,8 @@ class MainViewFragment : Fragment(), ItemListener {
 
             R.id.action_share -> {
                 var strMsg = ""
-                for(i in mDataList) {
-                    if(i.type == SECT) continue
+                for (i in mDataList) {
+                    if (i.type == SECT) continue
                     strMsg = "$strMsg\n* ${i.malayalam} - ${i.quantity}"
                 }
 
@@ -178,8 +185,8 @@ class MainViewFragment : Fragment(), ItemListener {
 
     private fun checkAllItems(check: Boolean) {
         val dataMap = HashMap<String, ShopItem>()
-        for(data in mInputDataList) {
-            if(data.type == SECT) continue
+        for (data in mInputDataList) {
+            if (data.type == SECT) continue
             dataMap[data.id] = data
             dataMap[data.id]?.checked = check
         }
@@ -247,7 +254,7 @@ class ShopListAdapter(
 
             mActionButton.setOnClickListener {
                 val saveState = mActionButton.tag as Boolean?
-                if(saveState != null && saveState) {
+                if (saveState != null && saveState) {
                     mActionButton.setSrc(context!!, R.drawable.ic_baseline_close_24)
                     listener.saveQuantity(item, mQuantity.text.toString())
                     mActionButton.tag = false
@@ -257,7 +264,7 @@ class ShopListAdapter(
             }
 
             mQuantity.onChange {
-                if(it.isNotEmpty() && mActionButton.tag != true) {
+                if (it.isNotEmpty() && mActionButton.tag != true) {
                     mActionButton.tag = true
                     mActionButton.setSrc(context!!, R.drawable.ic_baseline_check_24)
                 }
@@ -291,7 +298,7 @@ class ShopListAdapter(
         val inflater = LayoutInflater.from(parent.context)
 
         return if (viewType == ITEM) {
-            val view = inflater.inflate(R.layout.list_item_layout, parent, false)
+            val view = inflater.inflate(R.layout.list_item_drag_checkbox, parent, false)
             ShopItemViewHolder(view)
         } else {
             val view = inflater.inflate(R.layout.shop_list_seperator, parent, false)
@@ -303,7 +310,10 @@ class ShopListAdapter(
         if (nameList[position].type == ITEM) {
             (holder as ShopItemViewHolder).bindData(context, nameList[position], listener)
         } else {
-            (holder as SectionHeadingViewHolder).bindData(nameList[position].toString())
+            val secName = nameList[position].malayalam
+            val count =
+                nameList.filter { it.type != SECT && it.purchase && it.checked != secName.contains("Non") }.size
+            (holder as SectionHeadingViewHolder).bindData("$secName ($count items)")
         }
     }
 
@@ -356,13 +366,14 @@ class DragManageAdapter(private var adapter: ShopListAdapter, dragDir: Int, swip
     override fun isLongPressDragEnabled() = false
 }
 
-class ItemSearchAdapter(private var mContext: Context, private var mDataList: ArrayList<ShopItem>):
-        ArrayAdapter<ShopItem>(mContext, R.layout.simple_lite_item, mDataList) {
+class ItemSearchAdapter(private var mContext: Context, private var mDataList: ArrayList<ShopItem>) :
+    ArrayAdapter<ShopItem>(mContext, R.layout.shop_item_dropdown_item, mDataList) {
     private var filter = SearchFilter()
 
     private class ViewHolder(view: View?) {
         var name: TextView? = null
         var english: TextView? = null
+
         init {
             name = view?.findViewById(R.id.itemNameText)
             english = view?.findViewById(R.id.itemEnglishText)
@@ -381,8 +392,8 @@ class ItemSearchAdapter(private var mContext: Context, private var mDataList: Ar
         val item = mDataList[position]
 
         val inflater = mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        if(convertView == null) {
-            view = inflater.inflate(R.layout.simple_lite_item, parent, false)
+        if (convertView == null) {
+            view = inflater.inflate(R.layout.shop_item_dropdown_item, parent, false)
             viewHolder = ViewHolder(view)
             view.tag = viewHolder
         } else {
@@ -390,27 +401,28 @@ class ItemSearchAdapter(private var mContext: Context, private var mDataList: Ar
             viewHolder = view.tag as ViewHolder
         }
         viewHolder.name?.text = item.malayalam
-        viewHolder.english?.text = if(item.manglish.isNotEmpty()) "(${item.manglish})" else ""
+        viewHolder.english?.text = if (item.manglish.isNotEmpty()) "(${item.manglish})" else ""
         return view
     }
 
-    inner class SearchFilter: Filter() {
+    inner class SearchFilter : Filter() {
         private var completeList = ArrayList<ShopItem>()
         private var filteredList = ArrayList<ShopItem>()
 
         override fun performFiltering(constraint: CharSequence?): FilterResults {
-            if(completeList.isEmpty())
+            if (completeList.isEmpty())
                 completeList.addAll(mDataList)
 
             filteredList.clear()
             val results = FilterResults()
-            if(constraint == null || constraint.isEmpty()) {
+            if (constraint == null || constraint.isEmpty()) {
                 filteredList.addAll(completeList)
             } else {
                 val filterPattern = constraint.toString().toLowerCase(Locale.ENGLISH).trim()
-                for(item in completeList) {
-                    if(item.malayalam.toLowerCase(Locale.ENGLISH).contains(filterPattern) ||
-                        item.manglish.toLowerCase(Locale.ENGLISH).contains(filterPattern)) {
+                for (item in completeList) {
+                    if (item.malayalam.toLowerCase(Locale.ENGLISH).contains(filterPattern) ||
+                        item.manglish.toLowerCase(Locale.ENGLISH).contains(filterPattern)
+                    ) {
                         filteredList.add(item)
                     }
                 }
